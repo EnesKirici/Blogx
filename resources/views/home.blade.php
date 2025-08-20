@@ -6,7 +6,7 @@
 <div class="row">
     <!-- Hero Section -->
     <div class="col-12 mb-4">
-        <div class="bg-primary text-white p-4 rounded">
+        <div class="bg-secondary text-white p-4 rounded">
             <h1 class="display-4">Hoş Geldiniz! 👋</h1>
             <p class="lead">En güncel blog yazılarını keşfedin, kendi deneyimlerinizi paylaşın.</p>
             <a href="/posts" class="btn btn-light btn-lg">
@@ -31,15 +31,14 @@
                     <div class="post-meta">
                         <i class="fas fa-user me-1"></i>Ahmet Yılmaz
                         <i class="fas fa-calendar ms-3 me-1"></i>15 Ağustos 2025
-                        <i class="fas fa-clock ms-3 me-1"></i>5 dakika okuma
+                        <i class="fas fa-clock ms-3 me-1"></i># dakika okuma
                     </div>
                 </div>
-                <img src="https://via.placeholder.com/100x70" alt="Laravel" class="rounded">
+                <img src="/image/1704283823-laravel-featured.webp" alt="Laravel" class="rounded">
             </div>
             
             <p class="text-muted">
-                Laravel framework'ü ile modern web uygulamaları geliştirmenin inceliklerini öğrenin. 
-                MVC mimarisi, Eloquent ORM ve Blade template engine gibi konular...
+               Lorem ipsum dolor sit amet consectetur, adipisicing elit. Neque magnam cupiditate dicta repudiandae laborum numquam accusamus, excepturi modi nostrum nobis, ab aliquam aut. Eveniet consequatur rerum et, molestiae sunt vitae!
             </p>
             
             <div class="d-flex flex-wrap gap-2 mb-3">
@@ -84,20 +83,19 @@
                     <div class="post-meta">
                         <i class="fas fa-user me-1"></i>Zeynep Kaya
                         <i class="fas fa-calendar ms-3 me-1"></i>12 Ağustos 2025
-                        <i class="fas fa-clock ms-3 me-1"></i>7 dakika okuma
+                        <i class="fas fa-clock ms-3 me-1"></i># dakika okuma
                     </div>
                 </div>
                 <img src="https://via.placeholder.com/100x70" alt="JavaScript" class="rounded">
             </div>
             
             <p class="text-muted">
-                Modern JavaScript'in sunduğu arrow functions, destructuring, async/await gibi 
-                güçlü özellikleri pratik örneklerle keşfedin...
+                Lorem, ipsum dolor sit amet consectetur adipisicing elit. Neque culpa dolorem commodi harum, dignissimos quaerat, atque minus vel omnis consequatur, deserunt voluptates unde dolores possimus molestias voluptatibus praesentium eligendi officiis.
             </p>
             
             <div class="d-flex flex-wrap gap-2 mb-3">
                 <span class="badge bg-warning text-dark">JavaScript</span>
-                <span class="badge bg-warning text-dark">ES6+</span>
+                <span class="badge bg-warning text-dark">React</span>
                 <span class="badge bg-warning text-dark">Frontend</span>
             </div>
             
@@ -127,17 +125,16 @@
             </div>
         </article>
 
-        <!-- Call to Action -->
         <div class="text-center mt-5 mb-4">
             <h4>Siz de yazı paylaşmak ister misiniz?</h4>
             <p class="text-muted">Bilgilerinizi topluluğumuzla paylaşın ve deneyimlerinizi aktarın.</p>
-            <a href="/posts/create" class="btn btn-success btn-lg me-3">
+            <a href="/posts/create" class="btn btn-outline-success btn-lg me-3">
                 <i class="fas fa-plus me-2"></i>Yeni Yazı Oluştur
             </a>
-            <a href="/register" class="btn btn-primary btn-lg me-3">
+            <a href="/register" class="btn btn-outline-primary btn-lg me-3">
                 <i class="fas fa-user-plus me-2"></i>Hemen Kayıt Ol
             </a>
-            <a href="/posts" class="btn btn-outline-primary btn-lg">
+            <a href="/posts" class="btn btn-outline-secondary btn-lg">
                 <i class="fas fa-list me-2"></i>Tüm Yazıları Gör
             </a>
         </div>

@@ -12,7 +12,7 @@
     
     <style>
         .blog-post {
-            border: 1px solid #e9ecef;
+            border: 1px solid #8b8b8bff;
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 20px;
@@ -23,7 +23,7 @@
             font-size: 0.9em;
         }
         .reaction-bar {
-            border-top: 1px solid #e9ecef;
+            border-top: 1px solid #b1b1b1ff;
             padding-top: 10px;
             margin-top: 15px;
         }
@@ -38,11 +38,14 @@
             padding-left: 15px;
             border-left: 3px solid #dee2e6;
         }
+        .body {
+            background: #5a5a5aff !important;
+        }
     </style>
 </head>
-<body class="bg-light">
+<body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="{{ url('/') }}">
                 <i class="fas fa-blog me-2"></i>Blog Sitesi

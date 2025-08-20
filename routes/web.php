@@ -12,13 +12,13 @@ Route::get('/posts', function () {
     return view('home');
 });
 
-Route::get('/posts/{id}', function ($id) {
-    return view('post-detail');
-});
-
-// Yazı oluşturma (giriş yapmış kullanıcı için)
+// Yazı oluşturma (giriş yapmış kullanıcı için) - ÖNEMLİ: Bu önce olmalı!
 Route::get('/posts/create', function () {
     return view('create-post');
+});
+
+Route::get('/posts/{id}', function ($id) {
+    return view('post-detail');
 });
 
 // Test sayfaları
@@ -32,4 +32,9 @@ Route::get('/post-detail', function () {
 
 Route::get('/create-post', function () {
     return view('create-post');
+});
+
+// register / login sayfası //
+Route::get('/user-register', function () {
+    return view('user-register');
 });
