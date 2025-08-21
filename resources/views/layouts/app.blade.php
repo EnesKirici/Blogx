@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
+        
         .blog-post {
             border: 1px solid #8b8b8bff;
             border-radius: 8px;
@@ -37,9 +38,6 @@
             margin-left: 30px;
             padding-left: 15px;
             border-left: 3px solid #dee2e6;
-        }
-        .body {
-            background: #5a5a5aff !important;
         }
     </style>
 </head>
@@ -70,18 +68,21 @@
                 </ul>
                 
                 <ul class="navbar-nav">
+                    
                     @guest
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url('/login') }}">
+                            <a class="nav-link" href="{{ route(name: 'user.login') }}">
                                 <i class="fas fa-sign-in-alt me-1"></i>Giriş Yap
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url('/register') }}">
+                            <a class="nav-link" href="{{ route('user.register') }}">
                                 <i class="fas fa-user-plus me-1"></i>Kayıt Ol
                             </a>
                         </li>
+
                     @else
+                    
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-user me-1"></i>{{ Auth::user()->name }}
@@ -94,9 +95,16 @@
                                     <i class="fas fa-edit me-1"></i>Yazılarım
                                 </a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ url('/logout') }}">
-                                    <i class="fas fa-sign-out-alt me-1"></i>Çıkış Yap
-                                </a></li>
+
+                                <li>
+                                    <form method="POST" action="{{ route('logout') }}">  <!-- POST request -->
+                                        @csrf
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="fas fa-sign-out-alt me-1"></i>Çıkış Yap
+                                        </button>
+                                    </form>
+                                </li>
+                                
                             </ul>
                         </li>
                     @endguest
@@ -107,6 +115,44 @@
 
     <!-- Main Content -->
     <main class="container mt-4">
+        <!-- Flash Messages Container -->
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Hoşgeldiniz!</strong> {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Hata!</strong> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('info'))
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Bilgi!</strong> {{ session('info') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Hata!</strong>
+                <ul class="mb-0 mt-2">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         @yield('content')
     </main>
 

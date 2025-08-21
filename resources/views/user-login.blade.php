@@ -116,16 +116,17 @@
     }
 </style>
 
-
-    <div class="register-wrapper">
+<div class="register-wrapper">
     <div class="register-card">
         <!-- Header -->
         <div class="register-header">
-            <h2>Hesap Oluştur</h2>
+            <h2>Giriş Yap</h2>
+            <h8>Hesabınıza giriş yapın</h5>
         </div>
 
+
         <!-- Form -->
-                    <form method="POST" action="{{ route('user.create-post') }}">
+        <form method="POST" action="{{ route('user.login') }}">
             @csrf
             
             <!-- Hata mesajları göster -->
@@ -143,42 +144,11 @@
                     {{ session('success') }}
                 </div>
             @endif
-            
-            <!-- Ad Soyad -->
-            <div class="input-row">
-                <div class="input-group">
-                    <label class="input-label">Ad</label>
-                    <input type="text" class="form-input" name="name" placeholder="Adınızı girin" required>
-                </div>
-                <div class="input-group">
-                    <label class="input-label">Soyad</label>
-                    <input type="text" class="form-input" name="surname" placeholder="Soyadınızı girin" required>
-                </div>
-            </div>
 
             <!-- E-mail -->
             <div class="input-group">
                 <label class="input-label">E-Mail</label>
-                <input type="email" class="form-input" name="email" placeholder="E-mail adresinizi girin" required>
-            </div>
-
-            <!-- GSM -->
-           
-            <!-- Cinsiyet -->
-            <div class="input-group">
-                <label class="input-label">Cinsiyet</label>
-                <select class="form-input" name="gender" required>
-                    <option value="">Cinsiyet seçin</option>
-                    <option value="male">Erkek</option>
-                    <option value="female">Kadın</option>
-                    <option value="other">Belirtmek istemiyorum</option>
-                </select>
-            </div>
-
-            <!-- Şehir -->
-            <div class="input-group">
-                <label class="input-label">Şehir</label>
-                <input type="text" class="form-input" name="city" placeholder="Şehir" required>
+                <input type="email" class="form-input" name="email" placeholder="E-mail adresinizi girin" value="{{ old('email') }}" required>
             </div>
 
             <!-- Şifre -->
@@ -187,15 +157,17 @@
                 <input type="password" class="form-input" name="password" placeholder="Şifrenizi girin" required>
             </div>
 
-            <!-- Şifre -->
+            <!-- Beni Hatırla -->
             <div class="input-group">
-                <label class="input-label">Tekrar Şifre</label>
-                <input type="password" class="form-input" name="password_confirmation" placeholder="Şifrenizi girin" required>
+                <label>
+                    <input type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }}> 
+                    Beni Hatırla
+                </label>
             </div>
 
             <!-- Submit Button -->
             <button type="submit" class="submit-btn">
-                Hesap Oluştur
+                Giriş Yap
             </button>
         </form>
     </div>

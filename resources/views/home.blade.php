@@ -3,6 +3,10 @@
 @section('title', 'Ana Sayfa - Blog Sitesi')
 
 @section('content')
+
+<style>
+   
+</style>
 <div class="row">
     <!-- Hero Section -->
     <div class="col-12 mb-4">
@@ -31,7 +35,6 @@
                     <div class="post-meta">
                         <i class="fas fa-user me-1"></i>Ahmet Yılmaz
                         <i class="fas fa-calendar ms-3 me-1"></i>15 Ağustos 2025
-                        <i class="fas fa-clock ms-3 me-1"></i># dakika okuma
                     </div>
                 </div>
                 <img src="/image/1704283823-laravel-featured.webp" alt="Laravel" class="rounded">
@@ -83,7 +86,6 @@
                     <div class="post-meta">
                         <i class="fas fa-user me-1"></i>Zeynep Kaya
                         <i class="fas fa-calendar ms-3 me-1"></i>12 Ağustos 2025
-                        <i class="fas fa-clock ms-3 me-1"></i># dakika okuma
                     </div>
                 </div>
                 <img src="https://via.placeholder.com/100x70" alt="JavaScript" class="rounded">
@@ -128,10 +130,10 @@
         <div class="text-center mt-5 mb-4">
             <h4>Siz de yazı paylaşmak ister misiniz?</h4>
             <p class="text-muted">Bilgilerinizi topluluğumuzla paylaşın ve deneyimlerinizi aktarın.</p>
-            <a href="/posts/create" class="btn btn-outline-success btn-lg me-3">
+            <a href="{{ route('user.create-post') }}" class="btn btn-outline-success btn-lg me-3">
                 <i class="fas fa-plus me-2"></i>Yeni Yazı Oluştur
             </a>
-            <a href="/register" class="btn btn-outline-primary btn-lg me-3">
+            <a href="{{ route('user.register') }}" class="btn btn-outline-primary btn-lg me-3">
                 <i class="fas fa-user-plus me-2"></i>Hemen Kayıt Ol
             </a>
             <a href="/posts" class="btn btn-outline-secondary btn-lg">

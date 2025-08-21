@@ -3,6 +3,87 @@
 @section('title', 'Yeni Yazı Oluştur - Blog Sitesi')
 
 @section('content')
+<style>
+    body {
+        background: #5a5a5a !important;
+    }
+    .card {
+        background: #3d3d3d;
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        border: 1px solid #555;
+    }
+    .card-header {
+        background: #2a2a2a;
+        color: #ffffff;
+        border-radius: 15px 15px 0 0;
+        border-bottom: 1px solid #555;
+    }
+    .form-control {
+        background: #4a4a4a;
+        border: 1px solid #555;
+        color: white;
+        border-radius: 8px;
+    }
+    .form-control:focus {
+        background: #4a4a4a;
+        border-color: #66a3ff;
+        box-shadow: 0 0 0 0.2rem rgba(102, 163, 255, 0.25);
+        color: white;
+    }
+    .form-control::placeholder {
+        color: #bbb;
+    }
+    .form-label {
+        color: #e0e0e0;
+        font-weight: 500;
+    }
+    .form-text {
+        color: #999;
+    }
+    .btn-outline-secondary {
+        border-color: #555;
+        color: #e0e0e0;
+    }
+    .btn-outline-secondary:hover {
+        background: #555;
+        border-color: #666;
+        color: white;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #4a90e2, #357abd);
+        border: none;
+        box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+    }
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #357abd, #2968a3);
+        transform: translateY(-2px);
+    }
+    .bg-light {
+        background: #2a2a2a !important;
+        border-color: #555 !important;
+    }
+    .modal-content {
+        background: #3d3d3d;
+        color: #e0e0e0;
+    }
+    .modal-header {
+        border-bottom: 1px solid #555;
+    }
+    .modal-footer {
+        border-top: 1px solid #555;
+    }
+    .table {
+        color: #e0e0e0;
+    }
+    .table td {
+        border-color: #555;
+    }
+    .form-check-label {
+        color: #e0e0e0;
+    }
+</style>
+</style>
 <div class="row">
     <div class="col-lg-8 mx-auto">
         <div class="card">
@@ -12,7 +93,7 @@
                 </h3>
             </div>
             <div class="card-body">
-                <form method="POST" action="/posts" enctype="multipart/form-data">
+                <form method="POST" action="{{ route('posts.store') }}" enctype="multipart/form-data">
                     @csrf
                     
                     <!-- Başlık -->
@@ -100,24 +181,24 @@
                         <textarea class="form-control border-top-0 rounded-top-0" id="content" name="content" 
                                   rows="15" placeholder="Yazınızın içeriğini buraya yazın...
 
-Markdown formatını destekliyoruz:
+                                        Markdown formatını destekliyoruz:
 
-# Büyük Başlık
-## Orta Başlık
-### Küçük Başlık
+                                        # Büyük Başlık
+                                        ## Orta Başlık
+                                        ### Küçük Başlık
 
-**Kalın metin** ve *italik metin*
+                                        **Kalın metin** ve *italik metin*
 
-- Liste öğesi 1
-- Liste öğesi 2
+                                        - Liste öğesi 1
+                                        - Liste öğesi 2
 
-[Link metni](https://example.com)
+                                        [Link metni](https://example.com)
 
-```kod bloğu```
+                                        ```kod bloğu```
 
-> Alıntı metni
-
-" required></textarea>
+                                        > Alıntı metni"
+                                 required></textarea>
+                                 
                         <div class="form-text">
                             <i class="fab fa-markdown me-1"></i>
                             Markdown formatı desteklenir | 
@@ -281,58 +362,58 @@ function insertCode() {
     }
 }
 
-// Önizleme
-document.getElementById('previewModal').addEventListener('show.bs.modal', function() {
-    const title = document.getElementById('title').value;
-    const content = document.getElementById('content').value;
+// // Önizleme
+// document.getElementById('previewModal').addEventListener('show.bs.modal', function() {
+//     const title = document.getElementById('title').value;
+//     const content = document.getElementById('content').value;
     
-    // Basit markdown to HTML dönüştürme (gerçek projede markdown parser kullanılmalı)
-    let html = content
-        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-        .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-        .replace(/\*(.*)\*/gim, '<em>$1</em>')
-        .replace(/\n/gim, '<br>');
+//     // Basit markdown to HTML dönüştürme (gerçek projede markdown parser kullanılmalı)
+//     let html = content
+//         .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+//         .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+//         .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+//         .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+//         .replace(/\*(.*)\*/gim, '<em>$1</em>')
+//         .replace(/\n/gim, '<br>');
     
-    document.getElementById('preview-content').innerHTML = `
-        <h1>${title || 'Başlık girilmedi'}</h1>
-        <div class="post-meta mb-3">
-            <i class="fas fa-user me-1"></i>Sizin Adınız
-            <i class="fas fa-calendar ms-3 me-1"></i>${new Date().toLocaleDateString('tr-TR')}
-        </div>
-        <div>${html || 'İçerik girilmedi'}</div>
-    `;
-});
+//     document.getElementById('preview-content').innerHTML = `
+//         <h1>${title || 'Başlık girilmedi'}</h1>
+//         <div class="post-meta mb-3">
+//             <i class="fas fa-user me-1"></i>Sizin Adınız
+//             <i class="fas fa-calendar ms-3 me-1"></i>${new Date().toLocaleDateString('tr-TR')}
+//         </div>
+//         <div>${html || 'İçerik girilmedi'}</div>
+//     `;
+// });
 
-// Karakter sayacı
-document.getElementById('title').addEventListener('input', function() {
-    const length = this.value.length;
-    console.log(`Başlık: ${length} karakter`);
-});
+// // Karakter sayacı
+// document.getElementById('title').addEventListener('input', function() {
+//     const length = this.value.length;
+//     console.log(`Başlık: ${length} karakter`);
+// });
 
-// Otomatik kaydetme (localStorage)
-setInterval(function() {
-    const formData = {
-        title: document.getElementById('title').value,
-        excerpt: document.getElementById('excerpt').value,
-        content: document.getElementById('content').value,
-        tags: document.getElementById('tags').value
-    };
-    localStorage.setItem('blog_draft', JSON.stringify(formData));
-}, 30000); // 30 saniyede bir kaydet
+// // Otomatik kaydetme (localStorage)
+// setInterval(function() {
+//     const formData = {
+//         title: document.getElementById('title').value,
+//         excerpt: document.getElementById('excerpt').value,
+//         content: document.getElementById('content').value,
+//         tags: document.getElementById('tags').value
+//     };
+//     localStorage.setItem('blog_draft', JSON.stringify(formData));
+// }, 30000); // 30 saniyede bir kaydet
 
-// Sayfa yüklendiğinde taslağı geri yükle
-window.addEventListener('load', function() {
-    const draft = localStorage.getItem('blog_draft');
-    if(draft && confirm('Kaydedilmiş bir taslağınız var. Geri yüklemek ister misiniz?')) {
-        const data = JSON.parse(draft);
-        document.getElementById('title').value = data.title || '';
-        document.getElementById('excerpt').value = data.excerpt || '';
-        document.getElementById('content').value = data.content || '';
-        document.getElementById('tags').value = data.tags || '';
-    }
-});
+// // Sayfa yüklendiğinde taslağı geri yükle
+// window.addEventListener('load', function() {
+//     const draft = localStorage.getItem('blog_draft');
+//     if(draft && confirm('Kaydedilmiş bir taslağınız var. Geri yüklemek ister misiniz?')) {
+//         const data = JSON.parse(draft);
+//         document.getElementById('title').value = data.title || '';
+//         document.getElementById('excerpt').value = data.excerpt || '';
+//         document.getElementById('content').value = data.content || '';
+//         document.getElementById('tags').value = data.tags || '';
+//     }
+// });
 </script>
 @endsection
 @endsection
