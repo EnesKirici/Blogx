@@ -65,13 +65,36 @@
                             <i class="fas fa-newspaper me-1"></i>Tüm Yazılar
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url('/categories') }}">
+                            <i class="fas fa-tags me-1"></i>Kategoriler
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url('/about') }}">
+                            <i class="fas fa-info-circle me-1"></i>Hakkımızda
+                        </a>
+                    </li>
                 </ul>
+                
+                                <!-- Arama Kutusu -->
+                                <form class="d-flex" method="GET" action="{{ url('/') }}">
+                    <div class="input-group">
+                        <input class="form-control" type="search" name="search" 
+                            placeholder="Blog ara..." 
+                            value="{{ request('search') }}" 
+                            aria-label="Search">
+                        <button class="btn btn-outline-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                                 </form>
                 
                 <ul class="navbar-nav">
                     
                     @guest
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route(name: 'user.login') }}">
+                            <a class="nav-link" href="{{ route('user.login') }}">
                                 <i class="fas fa-sign-in-alt me-1"></i>Giriş Yap
                             </a>
                         </li>
@@ -88,7 +111,7 @@
                                 <i class="fas fa-user me-1"></i>{{ Auth::user()->name }}
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{{ url('/posts/create') }}">
+                                <li><a class="dropdown-item" href="{{ route('user.create-post')}}">
                                     <i class="fas fa-plus me-1"></i>Yeni Yazı
                                 </a></li>
                                 <li><a class="dropdown-item" href="{{ url('/my-posts') }}">

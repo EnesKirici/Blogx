@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Yazarın ID'si
-            $table->foreignId('category_id')->constrained()->onDelete('cascade'); // Kategori ID'si
             $table->string('title'); // Yazı başlığı
             $table->string('slug')->unique(); // URL dostu başlık
             $table->text('excerpt')->nullable(); // Kısa özet
             $table->longText('content'); // Yazı içeriği
             $table->string('featured_image')->nullable(); // Ana resim
+            $table->json('tags')->nullable(); // Etiketler ← FORM'DAN GELİYOR
             $table->enum('status', ['draft', 'published', 'archived'])->default('draft'); // Yazı durumu
             $table->boolean('is_featured')->default(false); // Öne çıkarılmış yazı mı?
             $table->boolean('allow_comments')->default(true); // Yorumlara izin ver

@@ -11,16 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('post_likes', function (Blueprint $table) {
+        Schema::create('comments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Beğenen kullanıcı
-            $table->foreignId('post_id')->constrained()->onDelete('cascade'); // Beğenilen yazı
+            $table->foreignId('post_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->text('content');
+            $table->boolean('is_approved')->default(true);
             $table->timestamps();
-
-            // Aynı kullanıcı aynı yazıyı sadece bir kez beğenebilir
-            $table->unique(['user_id', 'post_id']);
             
-            // İndeks
             $table->index(['post_id', 'created_at']);
         });
     }
@@ -30,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('post_likes');
+        Schema::dropIfExists('comments');
     }
 };

@@ -125,7 +125,7 @@
         </div>
 
         <!-- Form -->
-                    <form method="POST" action="{{ route('user.create-post') }}">
+                    <form method="POST" action="{{ route('user.register') }}">
             @csrf
             
             <!-- Hata mesajları göster -->

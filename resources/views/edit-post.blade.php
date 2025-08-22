@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Yeni Yazı Oluştur - Blog Sitesi')
+@section('title', 'Blog Düzenle - {{ $post->title }}')
 
 @section('content')
 <style>
@@ -82,61 +82,83 @@
     .form-check-label {
         color: #e0e0e0;
     }
+    .current-image {
+        max-width: 200px;
+        max-height: 150px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #555;
+    }
 </style>
-</style>
+
 <div class="row">
     <div class="col-lg-8 mx-auto">
         <div class="card">
             <div class="card-header">
                 <h3 class="mb-0">
-                    <i class="fas fa-plus-circle me-2"></i>Yeni Blog Yazısı Oluştur
+                    <i class="fas fa-edit me-2"></i>Blog Düzenle: {{ \Illuminate\Support\Str::limit($post->title, 50) }}
                 </h3>
+                <small class="text-muted">
+                    Son güncelleme: {{ $post->updated_at->format('d M Y H:i') }}
+                </small>
             </div>
             <div class="card-body">
-              <form method="POST" action="{{ route('posts.store') }}" enctype="multipart/form-data">                  
-             @csrf
+                <form method="POST" action="{{ route('posts.update', $post->slug) }}" enctype="multipart/form-data">                  
+                    @csrf
+                    @method('PUT')
                     
-                    <!-- Başlık -->
+                    <!-- Başlık (MEVCUT VERİ İLE DOLU) -->
                     <div class="mb-3">
                         <label for="title" class="form-label">
                             <i class="fas fa-heading me-1"></i>Başlık *
                         </label>
                         <input type="text" class="form-control" id="title" name="title" 
+                               value="{{ old('title', $post->title) }}" 
                                placeholder="Yazınızın başlığını girin..." required>
                         <div class="form-text">Dikkat çekici ve açıklayıcı bir başlık seçin</div>
                     </div>
                     
-                    <!-- Özet -->
+                    <!-- Özet (MEVCUT VERİ İLE DOLU) -->
                     <div class="mb-3">
                         <label for="excerpt" class="form-label">
                             <i class="fas fa-align-left me-1"></i>Özet
                         </label>
                         <textarea class="form-control" id="excerpt" name="excerpt" rows="3" 
-                                  placeholder="Yazınızın kısa bir özetini yazın..."></textarea>
+                                  placeholder="Yazınızın kısa bir özetini yazın...">{{ old('excerpt', $post->excerpt) }}</textarea>
                         <div class="form-text">Bu özet, yazı listelerinde görüntülenecek</div>
                     </div>
                     
-                    <!-- Kapak Resmi -->
+                    <!-- Kapak Resmi (MEVCUT RESMİ GÖSTER) -->
                     <div class="mb-3">
                         <label for="featured_image" class="form-label">
                             <i class="fas fa-image me-1"></i>Kapak Resmi
                         </label>
+                        
+                        @if($post->featured_image)
+                        <div class="mb-2">
+                            <p class="text-muted mb-1">Mevcut resim:</p>
+                            <img src="{{ asset('storage/' . $post->featured_image) }}" alt="Mevcut resim" class="current-image">
+                            <small class="d-block text-muted mt-1">Yeni resim yüklemezseniz bu resim korunacak</small>
+                        </div>
+                        @endif
+                        
                         <input type="file" class="form-control" id="featured_image" name="featured_image" 
                                accept="image/*">
                         <div class="form-text">JPG, PNG veya WebP formatında yükleyebilirsiniz (Maks: 5MB)</div>
                     </div>
                     
-                    <!-- Etiketler -->
+                    <!-- Etiketler (MEVCUT VERİLER İLE DOLU) -->
                     <div class="mb-3">
                         <label for="tags" class="form-label">
                             <i class="fas fa-tags me-1"></i>Etiketler
                         </label>
                         <input type="text" class="form-control" id="tags" name="tags" 
+                               value="{{ old('tags', $post->tags ? implode(', ', $post->tags) : '') }}"
                                placeholder="laravel, php, web-geliştirme">
                         <div class="form-text">Virgül ile ayırarak birden fazla etiket ekleyebilirsiniz</div>
                     </div>
                     
-                    <!-- İçerik -->
+                    <!-- İçerik (MEVCUT VERİ İLE DOLU) -->
                     <div class="mb-3">
                         <label for="content" class="form-label">
                             <i class="fas fa-edit me-1"></i>İçerik *
@@ -179,25 +201,7 @@
                         </div>
                         
                         <textarea class="form-control border-top-0 rounded-top-0" id="content" name="content" 
-                                  rows="15" placeholder="Yazınızın içeriğini buraya yazın...
-
-                                        Markdown formatını destekliyoruz:
-
-                                        # Büyük Başlık
-                                        ## Orta Başlık
-                                        ### Küçük Başlık
-
-                                        **Kalın metin** ve *italik metin*
-
-                                        - Liste öğesi 1
-                                        - Liste öğesi 2
-
-                                        [Link metni](https://example.com)
-
-                                        ```kod bloğu```
-
-                                        > Alıntı metni"
-                                 required></textarea>
+                                  rows="15" required>{{ old('content', $post->content) }}</textarea>
                                  
                         <div class="form-text">
                             <i class="fab fa-markdown me-1"></i>
@@ -206,7 +210,7 @@
                         </div>
                     </div>
                     
-                    <!-- Yayın Ayarları -->
+                    <!-- Yayın Ayarları (MEVCUT AYARLAR İLE) -->
                     <div class="card mb-3">
                         <div class="card-header">
                             <h6 class="mb-0">
@@ -217,15 +221,24 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="is_published" name="is_published" checked>
+                                        <input class="form-check-input" type="checkbox" id="is_published" name="is_published" 
+                                               {{ ($post->status === 'published') ? 'checked' : '' }}>
                                         <label class="form-check-label" for="is_published">
-                                            <i class="fas fa-globe me-1"></i>Hemen yayınla
+                                            <i class="fas fa-globe me-1"></i>Yayında
                                         </label>
+                                        <small class="d-block text-muted">
+                                            @if($post->status === 'published')
+                                                Yayın tarihi: {{ $post->published_at->format('d M Y H:i') }}
+                                            @else
+                                                Şu anda taslak
+                                            @endif
+                                        </small>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="allow_comments" name="allow_comments" checked>
+                                        <input class="form-check-input" type="checkbox" id="allow_comments" name="allow_comments" 
+                                               {{ $post->allow_comments ? 'checked' : '' }}>
                                         <label class="form-check-label" for="allow_comments">
                                             <i class="fas fa-comments me-1"></i>Yorumlara izin ver
                                         </label>
@@ -237,15 +250,21 @@
                     
                     <!-- Form Buttons -->
                     <div class="d-flex justify-content-between">
-                        <a href="/posts" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-1"></i>Geri Dön
-                        </a>
+                        <div>
+                            <a href="{{ route('posts.show', $post->slug) }}" class="btn btn-outline-secondary me-2">
+                                <i class="fas fa-eye me-1"></i>Yazıyı Görüntüle
+                            </a>
+                            <a href="{{ url('/') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Ana Sayfa
+                            </a>
+                        </div>
                         <div>
                             <button type="submit" name="action" value="draft" class="btn btn-outline-primary me-2">
                                 <i class="fas fa-save me-1"></i>Taslak Kaydet
                             </button>
                             <button type="submit" name="action" value="publish" class="btn btn-primary">
-                                <i class="fas fa-paper-plane me-1"></i>Yayınla
+                                <i class="fas fa-paper-plane me-1"></i>
+                                {{ ($post->status === 'published') ? 'Güncelle' : 'Yayınla' }}
                             </button>
                         </div>
                     </div>
@@ -367,7 +386,7 @@ document.getElementById('previewModal').addEventListener('show.bs.modal', functi
     const title = document.getElementById('title').value;
     const content = document.getElementById('content').value;
     
-    // Basit markdown to HTML dönüştürme (gerçek projede markdown parser kullanılmalı)
+    // Basit markdown to HTML dönüştürme
     let html = content
         .replace(/^# (.*$)/gim, '<h1>$1</h1>')
         .replace(/^## (.*$)/gim, '<h2>$1</h2>')
@@ -379,40 +398,11 @@ document.getElementById('previewModal').addEventListener('show.bs.modal', functi
     document.getElementById('preview-content').innerHTML = `
         <h1>${title || 'Başlık girilmedi'}</h1>
         <div class="post-meta mb-3">
-            <i class="fas fa-user me-1"></i>Sizin Adınız
+            <i class="fas fa-user me-1"></i>{{ Auth::user()->name ?? 'Kullanıcı' }}
             <i class="fas fa-calendar ms-3 me-1"></i>${new Date().toLocaleDateString('tr-TR')}
         </div>
         <div>${html || 'İçerik girilmedi'}</div>
     `;
-});
-
-// Karakter sayacı
-document.getElementById('title').addEventListener('input', function() {
-    const length = this.value.length;
-    console.log(`Başlık: ${length} karakter`);
-});
-
-// Otomatik kaydetme (localStorage)
-setInterval(function() {
-    const formData = {
-        title: document.getElementById('title').value,
-        excerpt: document.getElementById('excerpt').value,
-        content: document.getElementById('content').value,
-        tags: document.getElementById('tags').value
-    };
-    localStorage.setItem('blog_draft', JSON.stringify(formData));
-}, 30000); // 30 saniyede bir kaydet
-
-// Sayfa yüklendiğinde taslağı geri yükle
-window.addEventListener('load', function() {
-    const draft = localStorage.getItem('blog_draft');
-    if(draft && confirm('Kaydedilmiş bir taslağınız var. Geri yüklemek ister misiniz?')) {
-        const data = JSON.parse(draft);
-        document.getElementById('title').value = data.title || '';
-        document.getElementById('excerpt').value = data.excerpt || '';
-        document.getElementById('content').value = data.content || '';
-        document.getElementById('tags').value = data.tags || '';
-    }
 });
 </script>
 @endsection
