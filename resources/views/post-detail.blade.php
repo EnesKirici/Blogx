@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', '{{ $post->title }} - Blog Sitesi')
+@section('title', 'Blog Detayı ')
 
 @section('content')
 <div class="row">
@@ -118,7 +118,9 @@
             <div class="mb-4">
                 <div class="card">
                     <div class="card-body">
-                        <form action="{{ route('comments.store', $post->slug) }}" method="POST">
+                        @if($post->allow_comments)
+                            <div id="comments" class="comment-section mt-4">
+                                 <form action="{{ route('comments.store', $post->slug) }}" method="POST">
                             @csrf
                             <div class="mb-3">
                                 <textarea class="form-control" name="content" rows="3" 
@@ -137,6 +139,8 @@
                                 </button>
                             </div>
                         </form>
+                            </div>
+                            @endif
                     </div>
                 </div>
             </div>

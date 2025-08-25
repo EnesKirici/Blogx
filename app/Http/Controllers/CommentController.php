@@ -21,6 +21,7 @@ class CommentController extends Controller
         if (!$post->allow_comments) {
             return redirect()->back()->with('error', 'Bu yazıda yorumlara izin verilmiyor!');
         }
+        
 
         $request->validate([
             'content' => 'required|string|min:3|max:1000'
@@ -33,7 +34,7 @@ class CommentController extends Controller
         Comment::create([
             'post_id' => $post->id,
             'user_id' => Auth::id(),
-            'content' => $request->content
+            'content' => $request->get('content')
         ]);
 
         return redirect()->back()->with('success', 'Yorumunuz başarıyla eklendi!');

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Blog Düzenle - {{ $post->title }}')
+@section('title', 'Blog Düzenle')
 
 @section('content')
 <style>

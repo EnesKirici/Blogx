@@ -12,11 +12,17 @@ use Illuminate\Support\Facades\Auth;
 // Ana sayfa
 Route::get('/', [HomeController::class, 'index'])->name('index');
 
+// Tag API (YENİ)
+Route::get('/api/tags', [HomeController::class, 'getTags'])->name('api.tags');
+
 
 // Blog yazıları
 Route::get('/posts', function () {
     return view('home');
 });
+
+// Hakkımızda sayfası 
+Route::get('/hakkimizda', [HomeController::class, 'about'])->name('about');
 
 // TEK BLOG GÖRÜNÜMÜ (DİNAMİK)
 Route::get('/posts/{slug}', [PostController::class, 'show'])->name('posts.show');

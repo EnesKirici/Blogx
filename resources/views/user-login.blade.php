@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Hesap Oluştur - Blog Sitesi')
+@section('title', 'Hesap Giriş - Blog Sitesi')
 
 @section('content')
 <style>

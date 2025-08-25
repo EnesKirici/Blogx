@@ -25,6 +25,7 @@ class LikeController extends Controller
         if ($existingLike) {
             // Beğeniyi kaldır
             $existingLike->delete();
+            $post->decrementLikes(); // Model'deki method
             $liked = false;
             $message = 'Beğeni kaldırıldı!';
         } else {
@@ -33,11 +34,12 @@ class LikeController extends Controller
                 'post_id' => $post->id,
                 'user_id' => Auth::id()
             ]);
+            $post->incrementLikes(); // Model'deki method
             $liked = true;
             $message = 'Post beğenildi!';
         }
 
-        $likesCount = $post->likes()->count();
+        $likesCount = $post->fresh()->likes_count;
 
         return response()->json([
             'success' => true,

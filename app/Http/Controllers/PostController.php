@@ -89,7 +89,7 @@ class PostController extends Controller
         // Post güncelle
         $post->update([
             'title' => $request->title,
-            'content' => $request->content,
+            'content' => $request->get('content'),
             'excerpt' => $request->excerpt,
             'featured_image' => $featuredImage,
             'tags' => $tags,
@@ -178,7 +178,7 @@ class PostController extends Controller
         $post = Post::create([
             'title' => $request->title,
             'slug' => Str::slug($request->title) . '-' . uniqid(),
-            'content' => $request->content,
+            'content' => $request->get('content'),
             'excerpt' => $request->excerpt,
             'featured_image' => $featuredImage,
             'tags' => $tags, // Array olarak kaydet
@@ -206,6 +206,10 @@ class PostController extends Controller
         }
 
         $posts = Auth::user()->posts()->latest()->get();
+        
+        // $user = User::find(Auth::id());
+        // $posts = $user->posts()->latest()->get();
+
         return view('my-posts', compact('posts'));
     }
 }
