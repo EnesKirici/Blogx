@@ -11,14 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('post_tags', function (Blueprint $table) {
+        Schema::create('tags', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('post_id')->constrained()->onDelete('cascade'); // Yazı ID'si
-            $table->foreignId('tag_id')->constrained()->onDelete('cascade'); // Etiket ID'si
+            $table->string('name')->unique(); // Etiket adı (benzersiz)
+            $table->string('slug')->unique(); // URL dostu versiyon
+            $table->text('description')->nullable(); // Açıklama (opsiyonel)
+            $table->integer('usage_count')->default(0); // Kaç kez kullanıldığı
             $table->timestamps();
-
-            // Aynı yazıya aynı etiketin birden fazla eklenmesini engeller
-            $table->unique(['post_id', 'tag_id']);
+            
+            // Index'ler
+            $table->index('name');
+            $table->index('slug');
         });
     }
 
@@ -27,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('post_tags');
+        Schema::dropIfExists('tags');
     }
 };

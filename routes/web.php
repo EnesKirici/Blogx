@@ -5,8 +5,8 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\CommentController; // YENİ
-use App\Http\Controllers\LikeController; // YENİ
+use App\Http\Controllers\CommentController; 
+use App\Http\Controllers\LikeController; 
 use Illuminate\Support\Facades\Auth;
 
 // Ana sayfa
@@ -20,6 +20,10 @@ Route::get('/api/tags', [HomeController::class, 'getTags'])->name('api.tags');
 Route::get('/posts', function () {
     return view('home');
 });
+
+//APİ route
+Route::get('/api/tags', [HomeController::class, 'getTags'])->name('api.tags');
+
 
 // Hakkımızda sayfası 
 Route::get('/hakkimizda', [HomeController::class, 'about'])->name('about');

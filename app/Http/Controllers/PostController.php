@@ -177,18 +177,34 @@ class PostController extends Controller
         // Post oluştur (GİRİŞ YAPMIŞ KULLANICININ ID'Sİ İLE)
         $post = Post::create([
             'title' => $request->title,
-            'slug' => Str::slug($request->title) . '-' . uniqid(),
+            'slug' => $slug,
             'content' => $request->get('content'),
             'excerpt' => $request->excerpt,
-            'featured_image' => $featuredImage,
-            'tags' => $tags, // Array olarak kaydet
-            'status' => $status,
+            'featured_image' => $imagePath,
+            'status' => 'published',
             'allow_comments' => $request->has('allow_comments'),
-            'is_featured' => false, // Varsayılan
-            'published_at' => $publishedAt,
-            'user_id' => Auth::id() // ← KULLANICININ ID'Sİ!
+            'is_featured' => $request->has('is_featured'),
+            'published_at' => now(),
+            'user_id' => auth()->id()
         ]);
-
+        
+        // Tags'ları işle (YENİ YÖNTEM)
+        if ($request->filled('tags')) {
+            $tagNames = array_map('trim', explode(',', $request->tags));
+            $tagNames = array_filter($tagNames); // Boş olanları temizle
+            
+            $tagIds = [];
+            foreach ($tagNames as $tagName) {
+                if (!empty($tagName)) {
+                    $tag = \App\Models\Tag::createFromName($tagName);
+                    $tagIds[] = $tag->id;
+                }
+            }
+            
+            // Post'a tag'leri ekle
+            $post->tags()->sync($tagIds);
+        }
+        
         // Başarı mesajı
         $message = $status === 'published' 
             ? 'Blog yazınız başarıyla yayınlandı!' 

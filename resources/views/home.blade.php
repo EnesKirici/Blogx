@@ -99,19 +99,61 @@
                     alt="Default" class="rounded" style="width: 200px; height: 150px; object-fit: cover;">
                     @endif
                 </div>
-            </div>
-            
-            <!-- ETIKETLER (ALTTA) -->
-            @if($post->tags && count($post->tags) > 0)
-            <div class="d-flex flex-wrap gap-2 mb-3">
-                @foreach($post->tags as $tag)
-                    <a href="/?tag={{ urlencode($tag) }}" class="badge bg-secondary text-decoration-none" 
-                       style="color: white !important;">
-                        {{ $tag }}
-                    </a>
-                @endforeach
-            </div>
+            </div>  
+
+                    <!-- ETIKETLER (ALTTA) - HİBRİT SİSTEM -->
+@php
+    $displayTags = [];
+    
+    // Önce relational tags'ı dene
+    try {
+        if ($post->relationLoaded('tags') && $post->tags->count() > 0) {
+            // Relational tags var
+            foreach ($post->tags as $tag) {
+                $displayTags[] = [
+                    'name' => $tag->name,
+                    'type' => 'relational'
+                ];
+            }
+        }
+    } catch (\Exception $e) {
+        // Relational yok, devam et
+    }
+    
+    // Eğer relational tags yoksa, JSON'dan al
+    if (empty($displayTags) && isset($post->tags)) {
+        if (is_string($post->tags)) {
+            $jsonTags = json_decode($post->tags, true) ?: [];
+            foreach ($jsonTags as $tag) {
+                $displayTags[] = [
+                    'name' => $tag,
+                    'type' => 'json'
+                ];
+            }
+        } elseif (is_array($post->tags)) {
+            foreach ($post->tags as $tag) {
+                $displayTags[] = [
+                    'name' => $tag,
+                    'type' => 'array'
+                ];
+            }
+        }
+    }
+@endphp
+
+@if(!empty($displayTags))
+<div class="d-flex flex-wrap gap-2 mb-3">
+    @foreach($displayTags as $tag)
+        <a href="/?tag={{ urlencode($tag['name']) }}" 
+           class="badge {{ $selectedTag === $tag['name'] ? 'bg-warning text-dark' : 'bg-secondary' }} text-decoration-none">
+            {{ $tag['name'] }}
+            @if($tag['type'] === 'relational')
+                <i class="fas fa-database ms-1" title="Relational"></i>
             @endif
+        </a>
+    @endforeach
+</div>
+@endif
             
             <!-- REACTION BAR EN ALTTA -->
             <div class="reaction-bar d-flex justify-content-between align-items-center">

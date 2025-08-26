@@ -16,56 +16,74 @@ class Post extends Model
         'content',
         'excerpt',
         'featured_image',
-        'tags',
         'status',
         'allow_comments',
         'is_featured',
         'published_at',
-        'user_id'
+        'user_id',
+        'views_count',
+        'likes_count'
     ];
 
     protected $casts = [
-        'tags' => 'array',
         'is_featured' => 'boolean',
         'allow_comments' => 'boolean',
         'published_at' => 'datetime'
     ];
 
-    // Yazarla ilişki
+    // User ilişkisi
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // Yorumlar ilişkisi (YENİ)
+    // Comments ilişkisi
     public function comments()
     {
-        return $this->hasMany(Comment::class)->approved()->latest();
+        return $this->hasMany(Comment::class)->where('is_approved', true)->latest();
     }
 
-    // Beğeniler ilişkisi (YENİ)
+    // Likes ilişkisi
     public function likes()
     {
         return $this->hasMany(Like::class);
     }
 
-    // Toplam beğeni sayısı
-    public function getLikesCountAttribute()
+    // Tags ilişkisi (Many-to-Many) - YENİ
+    public function tags()
     {
-        return $this->likes()->count();
+        return $this->belongsToMany(Tag::class, 'post_tags');
     }
 
-    // Toplam yorum sayısı
+    // Kullanıcı beğenmiş mi?
+    public function isLikedBy($user)
+    {
+        if (!$user) return false;
+        return $this->likes()->where('user_id', $user->id)->exists();
+    }
+
+    // Dinamik like sayısı
+    public function getLikesCountAttribute()
+    {
+        return $this->attributes['likes_count'] ?? $this->likes()->count();
+    }
+
+    // Dinamik comment sayısı  
     public function getCommentsCountAttribute()
     {
         return $this->comments()->count();
     }
 
-    // Kullanıcı bu post'u beğenmiş mi?
-    public function isLikedBy($user)
+    // Dinamik views sayısı
+    public function getViewsCountAttribute()
     {
-        if (!$user) return false;
-        return $this->likes()->where('user_id', $user->id)->exists();
+        return $this->attributes['views_count'] ?? 0;
+    }
+
+    // Tag isimlerini array olarak döndür (backward compatibility için)
+    public function getTagNamesAttribute()
+    {
+        return $this->tags->pluck('name')->toArray();
     }
 
     // Slug otomatik oluştur

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\Tag;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -13,31 +14,43 @@ class HomeController extends Controller
         $selectedTag = $request ? $request->input('tag', '') : '';
         
         try {
-            $query = Post::with('user')
+            // HER İKİ SİSTEMİ DE YÜKLEYELİM
+            $query = Post::with(['user', 'tags'])
                         ->where('status', 'published');
             
-            // Arama filtreleme
+            // ARAMA FİLTRELEME
             if (!empty($search)) {
-                $searchTerm = '%' . $search . '%';
-                $query->where(function($q) use ($searchTerm) {
-                    $q->where('title', 'LIKE', $searchTerm)
-                      ->orWhere('content', 'LIKE', $searchTerm)
-                      ->orWhere('excerpt', 'LIKE', $searchTerm);
+                $query->where(function($q) use ($search) {
+                    $q->where('title', 'LIKE', '%' . $search . '%')
+                      ->orWhere('content', 'LIKE', '%' . $search . '%')
+                      ->orWhere('excerpt', 'LIKE', '%' . $search . '%');
                 });
             }
             
-            // Tag filtreleme (BASİT)
+            // TAG FİLTRELEME - HİBRİT YAKLAŞIM
             if (!empty($selectedTag)) {
-                $query->whereJsonContains('tags', $selectedTag);
+                $query->where(function($q) use ($selectedTag) {
+                    // 1. Relational tags'da ara
+                    $q->whereHas('tags', function($tagQuery) use ($selectedTag) {
+                        $tagQuery->where('name', $selectedTag);
+                    })
+                    // 2. JSON tags'da ara (eski sistem)
+                    ->orWhereJsonContains('tags', $selectedTag)
+                    ->orWhere('tags', 'LIKE', '%"' . $selectedTag . '"%');
+                });
             }
             
-            // Normal sıralama (sadece yenilik)
-            $query->orderBy('published_at', 'desc');
-            
-            $posts = $query->limit(10)->get();
+            $posts = $query->orderBy('published_at', 'desc')
+                          ->limit(10)
+                          ->get();
             
         } catch (\Exception $e) {
-            $posts = collect([]);
+            // Hata durumunda basit query
+            $posts = Post::with('user')
+                        ->where('status', 'published')
+                        ->orderBy('published_at', 'desc')
+                        ->limit(10)
+                        ->get();
         }
         
         return view('home', [
@@ -47,26 +60,41 @@ class HomeController extends Controller
         ]);
     }
 
-    // Hakkımızda sayfası
     public function about()
     {
         return view('about');
     }
 
-    // Basit etiketleri döndür
+    // API Endpoint - Hibrit sistem
     public function getTags()
     {
         try {
-            // Tüm post'lardan etiketleri topla
+            $tagCounts = [];
+            
+            // 1. Relational tags'ları al
+            $relationalTags = Tag::withCount('posts')
+                                ->orderBy('posts_count', 'desc')
+                                ->get();
+            
+            foreach ($relationalTags as $tag) {
+                $tagCounts[$tag->name] = $tag->posts_count;
+            }
+            
+            // 2. JSON tags'ları da al (eski sistem)
             $posts = Post::where('status', 'published')
                         ->whereNotNull('tags')
                         ->get();
             
-            $tagCounts = [];
-            
             foreach ($posts as $post) {
-                if ($post->tags && is_array($post->tags)) {
-                    foreach ($post->tags as $tag) {
+                // Sadece JSON field'ı varsa işle
+                if ($post->getAttributes()['tags']) {
+                    $postTags = [];
+                    
+                    if (is_string($post->getAttributes()['tags'])) {
+                        $postTags = json_decode($post->getAttributes()['tags'], true) ?: [];
+                    }
+                    
+                    foreach ($postTags as $tag) {
                         $tag = trim($tag);
                         if (!empty($tag)) {
                             $tagCounts[$tag] = isset($tagCounts[$tag]) ? $tagCounts[$tag] + 1 : 1;
@@ -75,8 +103,8 @@ class HomeController extends Controller
                 }
             }
             
-            // Alfabetik sıralama
-            ksort($tagCounts);
+            // En çok kullanılan etiketler önce
+            arsort($tagCounts);
             
             $tags = [];
             foreach ($tagCounts as $tag => $count) {
@@ -88,15 +116,19 @@ class HomeController extends Controller
             
             return response()->json([
                 'success' => true,
-                'tags' => $tags
+                'tags' => $tags,
+                'debug' => [
+                    'relational_tags' => $relationalTags->count(),
+                    'total_unique_tags' => count($tags)
+                ]
             ]);
             
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'tags' => [],
-                'error' => $e->getMessage()
-            ]);
+                'error' => $e->getMessage(),
+                'tags' => []
+            ], 500);
         }
     }
 }
