@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* GLOBAL DARK THEME (about.blade.php'den alındı) */
+        /* GLOBAL DARK THEME  */
         body {
             background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
             min-height: 100vh;
@@ -35,7 +35,7 @@
         .blog-post:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-            border-color: #66a3ff !important;
+            border-color: #dc3545!important;
         }
         
         .post-meta {
@@ -160,6 +160,10 @@
             background: linear-gradient(135deg, #000000, #2d2d2d) !important;
             border-top: 1px solid #444;
         }
+
+        .navbar-dark .navbar-nav .nav-link {
+            color: #e0e0e0 !important;
+        }
         
         /* Forms */
         .form-control {
@@ -177,9 +181,40 @@
         
         .form-control::placeholder {
             color: #888 !important;
+            
         }
+       .bg-dark {
+        background: linear-gradient(135deg, #000000, #2d2d2d) !important;
+        border-top: 1px solid #444;
+        }
+        .navbar-dark .navbar-brand,
+        .navbar-dark .navbar-nav .nav-link{
+                color:#e0e0e0 !important;
+                transition: all 0.3s ease;
+        }
+
+        .navbar-dark .navbar-brand:hover,
+        .navbar-dark .navbar-nav .nav-link:hover{
+                color:#dc3545 !important;
+                text-shadow: 0 0 8px rgba(255,77,77,0.6);
+                }
+
+        .dropdown-item:hover{
+            color:#dc3545 !important;
+            transition: all 0.5s ease;
+            
+        }
+        
+        .form-control:hover,
+        .form-control:focus
+        {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 8px rgba(255,77,77,0.6) !important;
+        }
+
+              
+
     </style>
-</head>
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -239,7 +274,7 @@
                             placeholder="Blog ara..." 
                             value="{{ request('search') }}" 
                              aria-label="Search">
-                        <button class="btn btn-outline-primary" type="submit">
+                        <button class="btn btn-outline-danger" type="submit">
                             <i class="fas fa-search"></i>
                         </button>
                     </div>
@@ -266,8 +301,8 @@
                                 <li><a class="dropdown-item" href="{{ route('user.create-post')}}">
                                     <i class="fas fa-plus me-1"></i>Yeni Yazı
                                 </a></li>
-                                <li><a class="dropdown-item" href="{{ url('/my-posts') }}">
-                                    <i class="fas fa-edit me-1"></i>Yazılarım
+                                <li><a class="dropdown-item" href="{{ route('posts.my-posts') }}">
+                                    <i class="fas fa-edit me-1"></i>Profil/Yazılarım
                                 </a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>

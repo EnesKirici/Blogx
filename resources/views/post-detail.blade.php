@@ -27,7 +27,7 @@
                             <li><a class="dropdown-item" href="{{ route('posts.edit', $post->slug) }}">
                                 <i class="fas fa-edit me-1"></i>Düzenle
                             </a></li>
-                            <li><a class="dropdown-item text-danger" href="#" onclick="deletePost()">
+                            <li><a class="dropdown-item text-danger" href="#" onclick="deletePost('{{ $post->slug }}')">
                                 <i class="fas fa-trash me-1"></i>Sil
                             </a></li>
                         </ul>
@@ -251,9 +251,28 @@
 
 @section('scripts')
 <script>
-function deletePost() {
+function deletePost(slug) {
     if(confirm('Bu yazıyı silmek istediğinizden emin misiniz?')) {
-        alert('Silme özelliği yakında eklenecek!');
+        fetch(`/posts/${slug}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Yazı başarıyla silindi!');
+                window.location.href = '/my-posts'; // Yazılarım sayfasına yönlendir
+            } else {
+                alert('Hata: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Bir hata oluştu!');
+        });
     }
 }
 

@@ -3,105 +3,76 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\Tag;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
-    public function index(Request $request = null)
+    public function index(Request $request)
     {
-        $search = $request ? $request->input('search', '') : '';
-        $selectedTag = $request ? $request->input('tag', '') : '';
+        $search = $request->get('search');
+        $selectedTag = $request->get('tag');
         
-        // DEBUG - GEÇİCİ
-        if (!empty($search)) {
-            \Log::info('Arama yapılıyor:', [
-                'search' => $search,
-                'request_all' => $request->all()
-            ]);
+        $query = Post::with(['user', 'tags']) // tags eklendi
+                     ->withCount(['likes', 'comments'])
+                     ->where('status', 'published')
+                     ->latest('published_at');
+        
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'LIKE', "%{$search}%")
+                  ->orWhere('content', 'LIKE', "%{$search}%")
+                  ->orWhere('excerpt', 'LIKE', "%{$search}%");
+            });
         }
         
-        try {
-            // Basit post çekme
-            $allPosts = Post::with('user')
-                           ->where('status', 'published')
-                           ->orderBy('published_at', 'desc')
-                           ->get();
-            
-            $filteredPosts = $allPosts;
-            
-            // ARAMA FİLTRELEME - DÜZELT
-            if (!empty($search)) {
-                $filteredPosts = $filteredPosts->filter(function($post) use ($search) {
-                    $searchLower = strtolower($search);
-                    
-                    return stripos($post->title, $searchLower) !== false ||
-                           stripos($post->content, $searchLower) !== false ||
-                           stripos($post->excerpt ?? '', $searchLower) !== false;
-                });
-            }
-            
-            // TAG FİLTRELEME
-            if (!empty($selectedTag)) {
-                $filteredPosts = $filteredPosts->filter(function($post) use ($selectedTag) {
-                    $postTags = $this->getPostTags($post);
-                    
-                    foreach ($postTags as $tag) {
-                        if (strtolower(trim($tag)) === strtolower(trim($selectedTag))) {
-                            return true;
-                        }
-                    }
-                    return false;
-                });
-            }
-            
-            $posts = $filteredPosts->take(10);
-            
-        } catch (\Exception $e) {
-            $posts = collect([]);
+        if ($selectedTag) {
+            $query->whereHas('tags', function($q) use ($selectedTag) {
+                $q->where('name', $selectedTag);
+            });
         }
         
-        return view('home', [
-            'posts' => $posts,
-            'search' => $search,
-            'selectedTag' => $selectedTag
-        ]);
+        $posts = $query->get();
+        
+        return view('home', compact('posts', 'search', 'selectedTag'));
     }
-
-    // Post'un tag'lerini al (her sistemle uyumlu)
-    private function getPostTags($post)
-    {
-        $tags = [];
-        
-        // Relational tags varsa
-        try {
-            if ($post->relationLoaded('tags') && $post->tags && $post->tags->count() > 0) {
-                foreach ($post->tags as $tag) {
-                    $tags[] = $tag->name;
-                }
-                return $tags;
-            }
-        } catch (\Exception $e) {
-            // Relational yok, devam et
-        }
-        
-        // JSON/Array tags varsa
-        try {
-            $rawTags = $post->getAttributes()['tags'] ?? $post->tags ?? null;
-            
-            if (is_string($rawTags)) {
-                $tags = json_decode($rawTags, true) ?: [];
-            } elseif (is_array($rawTags)) {
-                $tags = $rawTags;
-            }
-        } catch (\Exception $e) {
-            // Hata varsa boş döndür
-        }
-        
-        return $tags;
-    }
+    
 
     public function about()
     {
         return view('about');
+    }
+
+
+
+    // API Endpoint - Sadece relational tags
+    public function getTags()
+    {
+        try {
+            $tags = Tag::orderBy('usage_count', 'desc')
+                      ->orderBy('name', 'asc')
+                      ->get();
+            
+            $tagsArray = [];
+            foreach ($tags as $tag) {
+                $tagsArray[] = [
+                    'name' => $tag->name,
+                    'count' => $tag->usage_count,
+                    'slug' => $tag->slug
+                ];
+            }
+            
+            return response()->json([
+                'success' => true,
+                'tags' => $tagsArray
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'tags' => []
+            ], 500);
+        }
     }
 }

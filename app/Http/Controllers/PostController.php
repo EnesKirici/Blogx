@@ -14,10 +14,8 @@ class PostController extends Controller
     // Blog düzenleme sayfasını göster
     public function edit($slug)
     {
-        // Slug'a göre postu bul
         $post = Post::where('slug', $slug)->firstOrFail();
         
-        // Sadece yazarın kendisi düzenleyebilir
         if (!Auth::check() || $post->user_id !== Auth::id()) {
             return redirect('/')
                    ->with('error', 'Bu yazıyı düzenleme yetkiniz yok!');
@@ -29,16 +27,13 @@ class PostController extends Controller
     // Blog güncelleme işlemi
     public function update(Request $request, $slug)
     {
-        // Postu bul
         $post = Post::where('slug', $slug)->firstOrFail();
         
-        // Yetki kontrolü
         if (!Auth::check() || $post->user_id !== Auth::id()) {
             return redirect('/')
                    ->with('error', 'Bu yazıyı düzenleme yetkiniz yok!');
         }
 
-        // Form doğrulama
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'content' => 'required|string|min:10',
@@ -53,17 +48,8 @@ class PostController extends Controller
                    ->withInput();
         }
 
-        // Tags'i işle
-        $tags = null;
-        if ($request->tags) {
-            $tags = array_map('trim', explode(',', $request->tags));
-            $tags = array_filter($tags);
-        }
-
-        // Resim yükleme (yeni resim varsa)
-        $featuredImage = $post->featured_image; // Mevcut resmi koru
+        $featuredImage = $post->featured_image;
         if ($request->hasFile('featured_image')) {
-            // Eski resmi sil
             if ($post->featured_image) {
                 $oldImagePath = public_path('storage/' . $post->featured_image);
                 if (file_exists($oldImagePath)) {
@@ -73,8 +59,7 @@ class PostController extends Controller
             $featuredImage = $request->file('featured_image')->store('posts', 'public');
         }
 
-        // Status belirleme
-        $status = $post->status; // Mevcut durumu koru
+        $status = $post->status;
         $publishedAt = $post->published_at;
 
         if ($request->action === 'publish' || $request->has('is_published')) {
@@ -86,19 +71,16 @@ class PostController extends Controller
             $status = 'draft';
         }
 
-        // Post güncelle
         $post->update([
             'title' => $request->title,
             'content' => $request->get('content'),
             'excerpt' => $request->excerpt,
             'featured_image' => $featuredImage,
-            'tags' => $tags,
             'status' => $status,
             'allow_comments' => $request->has('allow_comments'),
             'published_at' => $publishedAt,
         ]);
 
-        // Başarı mesajı
         $message = $status === 'published' 
             ? 'Blog yazınız başarıyla güncellendi!' 
             : 'Blog yazınız taslak olarak güncellendi!';
@@ -107,43 +89,40 @@ class PostController extends Controller
                ->with('success', $message);
     }
 
-    // Tek blog yazısını göster (DİNAMİK)
+    // Tek blog yazısını göster
     public function show($slug)
     {
-        // Slug'a göre postu bul
-        $post = Post::with('user') // Yazar bilgileriyle birlikte
+        $post = Post::with(['user', 'comments.user', 'tags'])
+                   ->withCount(['likes', 'comments'])
                    ->where('slug', $slug)
-                   ->where('status', 'published') // Sadece yayında olanlar
-                   ->firstOrFail(); // Bulamazsa 404
+                   ->where('status', 'published')
+                   ->firstOrFail();
 
-        // Görüntülenme sayısını artır
         $post->increment('views_count');
 
-        // İlgili yazılar (aynı etiketlere sahip)
         $relatedPosts = Post::with('user')
                            ->where('status', 'published')
-                           ->where('id', '!=', $post->id) // Mevcut yazı hariç
+                           ->where('id', '!=', $post->id)
                            ->limit(2)
                            ->get();
 
         return view('post-detail', compact('post', 'relatedPosts'));
     }
 
+    // Yeni blog yazısı kaydet
     public function store(Request $request)
     {
-        // Giriş kontrolü
         if (!Auth::check()) {
             return redirect()->route('user.login')
                    ->with('error', 'Blog yazısı oluşturmak için giriş yapmalısınız!');
         }
 
-        // Form doğrulama
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'content' => 'required|string|min:10',
             'excerpt' => 'nullable|string|max:500',
             'tags' => 'nullable|string',
-            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB
+            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
 
         if ($validator->fails()) {
@@ -152,21 +131,21 @@ class PostController extends Controller
                    ->withInput();
         }
 
-        // Tags'i işle (virgülle ayrılmış string → array)
-        $tags = null;
-        if ($request->tags) {
-            $tags = array_map('trim', explode(',', $request->tags));
-            $tags = array_filter($tags); // Boş değerleri temizle
+        $slug = Str::slug($request->title);
+        
+        $originalSlug = $slug;
+        $counter = 1;
+        while (Post::where('slug', $slug)->exists()) {
+            $slug = $originalSlug . '-' . $counter;
+            $counter++;
         }
 
-        // Resim yükleme
         $featuredImage = null;
         if ($request->hasFile('featured_image')) {
             $featuredImage = $request->file('featured_image')->store('posts', 'public');
         }
 
-        // Status belirleme (Form'daki action butonuna göre)
-        $status = 'draft'; // Varsayılan
+        $status = 'draft';
         $publishedAt = null;
 
         if ($request->action === 'publish' || $request->has('is_published')) {
@@ -174,24 +153,22 @@ class PostController extends Controller
             $publishedAt = now();
         }
 
-        // Post oluştur (GİRİŞ YAPMIŞ KULLANICININ ID'Sİ İLE)
         $post = Post::create([
             'title' => $request->title,
             'slug' => $slug,
             'content' => $request->get('content'),
             'excerpt' => $request->excerpt,
-            'featured_image' => $imagePath,
-            'status' => 'published',
+            'featured_image' => $featuredImage,
+            'status' => $status,
             'allow_comments' => $request->has('allow_comments'),
             'is_featured' => $request->has('is_featured'),
-            'published_at' => now(),
+            'published_at' => $publishedAt,
             'user_id' => auth()->id()
         ]);
         
-        // Tags'ları işle (YENİ YÖNTEM)
         if ($request->filled('tags')) {
             $tagNames = array_map('trim', explode(',', $request->tags));
-            $tagNames = array_filter($tagNames); // Boş olanları temizle
+            $tagNames = array_filter($tagNames);
             
             $tagIds = [];
             foreach ($tagNames as $tagName) {
@@ -201,31 +178,100 @@ class PostController extends Controller
                 }
             }
             
-            // Post'a tag'leri ekle
             $post->tags()->sync($tagIds);
         }
         
-        // Başarı mesajı
-        $message = $status === 'published' 
-            ? 'Blog yazınız başarıyla yayınlandı!' 
-            : 'Blog yazınız taslak olarak kaydedildi!';
+        return redirect()->route('posts.show', $post->slug)
+               ->with('success', 'Blog yazısı başarıyla yayınlandı!');
+    }
 
-        return redirect('/')
-               ->with('success', $message);
+    // BEĞENI BUTONU İÇİN YENİ METHOD
+    public function like($slug)
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Beğenmek için giriş yapmalısınız'
+            ], 401);
+        }
+
+        $post = Post::where('slug', $slug)->firstOrFail();
+        $user = Auth::user();
+
+        // Beğeni kontrolü - Like tablosu veya post tablosunda user_id kontrolü
+        $existingLike = $post->likes()->where('user_id', $user->id)->first();
+
+        if ($existingLike) {
+            // Beğeniyi kaldır
+            $existingLike->delete();
+            $liked = false;
+        } else {
+            // Beğeni ekle
+            $post->likes()->create(['user_id' => $user->id]);
+            $liked = true;
+        }
+
+        // Güncel beğeni sayısını al
+        $likesCount = $post->likes()->count();
+
+        return response()->json([
+            'success' => true,
+            'liked' => $liked,
+            'likes_count' => $likesCount,
+            'message' => $liked ? 'Yazı beğenildi!' : 'Beğeni kaldırıldı!'
+        ]);
     }
 
     // Kullanıcının kendi yazıları
     public function myPosts()
     {
         if (!Auth::check()) {
-            return redirect()->route('user.login');
+            return redirect()->route('user.login')
+                   ->with('error', 'Bu sayfayı görüntülemek için giriş yapmalısınız!');
         }
 
-        $posts = Auth::user()->posts()->latest()->get();
-        
-        // $user = User::find(Auth::id());
-        // $posts = $user->posts()->latest()->get();
+        $posts = Auth::user()->posts()
+                 ->with(['tags'])
+                 ->withCount(['likes', 'comments'])
+                 ->latest()
+                 ->get();
+    
+        return view('myposts', compact('posts'));
+    }
 
-        return view('my-posts', compact('posts'));
+    public function destroy($slug)
+    {
+        try {
+            $post = Post::where('slug', $slug)->firstOrFail();
+            
+            // Sadece yazı sahibi silebilir
+            if ($post->user_id !== auth()->id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bu yazıyı silme yetkiniz yok!'
+                ], 403);
+            }
+            
+            // Fotoğrafı sil (varsa)
+            if ($post->featured_image) {
+                $imagePath = public_path('storage/' . $post->featured_image);
+                if (file_exists($imagePath)) {
+                    unlink($imagePath);
+                }
+            }
+            
+            $post->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Yazı başarıyla silindi!'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Silme işlemi sırasında hata oluştu!'
+            ], 500);
+        }
     }
 }

@@ -237,7 +237,7 @@
                     
                     <!-- Form Buttons -->
                     <div class="d-flex justify-content-between">
-                        <a href="/posts" class="btn btn-outline-secondary">
+                        <a href="{{route('index')  }}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-1"></i>Geri Dön
                         </a>
                         <div>

@@ -37,6 +37,11 @@ class Post extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function tags()
+{
+    return $this->belongsToMany(Tag::class, 'post_tags', 'post_id', 'tag_id');
+}
+
     // Comments ilişkisi
     public function comments()
     {
@@ -46,19 +51,14 @@ class Post extends Model
     // Likes ilişkisi
     public function likes()
     {
-        return $this->hasMany(Like::class);
+        return $this->hasMany(\App\Models\Like::class);
     }
 
-    // Tags ilişkisi (Many-to-Many) - YENİ
-    public function tags()
-    {
-        return $this->belongsToMany(Tag::class, 'post_tags');
-    }
+    // Tags ilişkisi (Many-to-Many) - SADECE BU KALACAK
 
     // Kullanıcı beğenmiş mi?
     public function isLikedBy($user)
     {
-        if (!$user) return false;
         return $this->likes()->where('user_id', $user->id)->exists();
     }
 
@@ -78,12 +78,6 @@ class Post extends Model
     public function getViewsCountAttribute()
     {
         return $this->attributes['views_count'] ?? 0;
-    }
-
-    // Tag isimlerini array olarak döndür (backward compatibility için)
-    public function getTagNamesAttribute()
-    {
-        return $this->tags->pluck('name')->toArray();
     }
 
     // Slug otomatik oluştur
@@ -114,5 +108,11 @@ class Post extends Model
     public function isOwnedBy($user)
     {
         return $this->user_id === $user->id;
+    }
+
+    // Tag isimlerini array olarak döndür (home.blade.php uyumluluğu için)
+    public function getTagNamesAttribute()
+    {
+        return $this->tags->pluck('name')->toArray();
     }
 }

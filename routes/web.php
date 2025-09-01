@@ -6,50 +6,40 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CommentController; 
-use App\Http\Controllers\LikeController; 
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\UserController;
+
 
 // Ana sayfa
 Route::get('/', [HomeController::class, 'index'])->name('index');
 
-// Tag API (YENİ)
-Route::get('/api/tags', [HomeController::class, 'getTags'])->name('api.tags');
-
-
-// Blog yazıları
-Route::get('/posts', function () {
-    return view('home');
-});
 
 //APİ route
 Route::get('/api/tags', [HomeController::class, 'getTags'])->name('api.tags');
 
+// TEK BLOG GÖRÜNÜMÜ (DİNAMİK)
+Route::get('/posts/{slug}', [PostController::class, 'show'])->name('posts.show');
 
 // Hakkımızda sayfası 
 Route::get('/hakkimizda', [HomeController::class, 'about'])->name('about');
-
-// TEK BLOG GÖRÜNÜMÜ (DİNAMİK)
-Route::get('/posts/{slug}', [PostController::class, 'show'])->name('posts.show');
 
 // BLOG DÜZENLEME
 Route::get('/posts/{slug}/edit', [PostController::class, 'edit'])->name('posts.edit');
 Route::put('/posts/{slug}', [PostController::class, 'update'])->name('posts.update');
 
-// YORUM SİSTEMİ (YENİ)
+// YORUM SİSTEMİ
 Route::post('/posts/{slug}/comments', [CommentController::class, 'store'])->name('comments.store');
 Route::delete('/comments/{id}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
-// BEĞENİ SİSTEMİ (YENİ)
-Route::post('/posts/{slug}/like', [LikeController::class, 'toggle'])->name('posts.like');
+// BEĞENİ SİSTEMİ 
+Route::post('/posts/{slug}/like', [PostController::class, 'like'])->name('posts.like');
 
-// Test sayfaları
-Route::get('/home', function () {
-    return view('home');
-});
+// KULLANICI PROFİLİ
+Route::get('/my-posts', [PostController::class, 'myPosts'])->name('posts.my-posts');
 
-Route::get('/post-detail', function () {
-    return view('post-detail');
-});
+// post silme
+Route::delete('/posts/{slug}', [PostController::class, 'destroy'])->name('posts.destroy');
+
 
 // Auth Routes
 Route::get('/kullanici-olustur', [RegisterController::class, 'show'])->name('user.register');
@@ -59,6 +49,10 @@ Route::get('/kullanici-giris', [LoginController::class, 'show'])->name('user.log
 Route::post('/kullanici-giris', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+
+Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+
+
 // Post Routes
 Route::get('/post-olustur', function () {
     if (!Auth::check()) {
@@ -67,7 +61,3 @@ Route::get('/post-olustur', function () {
     }
     return view('create-post');
 })->name('user.create-post');
-
-Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
-Route::get('/my-posts', [PostController::class, 'myPosts'])->name('posts.my-posts');
-

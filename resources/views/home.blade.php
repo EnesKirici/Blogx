@@ -1,3 +1,7 @@
+@php 
+use Illuminate\Support\Facades\DB;
+@endphp
+
 @extends('layouts.app')
 
 @section('title', 'Ana Sayfa - Blog Sitesi')
@@ -5,6 +9,20 @@
 @section('content')
 
 
+<style>
+    .text-decoration-none{
+        color: white;
+    }
+        .text-decoration-none:hover{
+        color: #dc3545 !important;
+        transition: all 0.5s ease;
+        }
+    .text-primary{
+        color: white;
+    }
+
+
+</style>
     <!-- Arama/Filtreleme Sonuçları Bilgisi -->
     @if(!empty($search) || !empty($selectedTag))
     <div class="col-12 mb-3">
@@ -12,13 +30,13 @@
             <div>
                 @if(!empty($search) && !empty($selectedTag))
                     <i class="fas fa-search me-2"></i>
-                    "<strong>{{ $search }}</strong>" araması ve "<strong>{{ $selectedTag }}</strong>" etiketi için {{ $posts->count() }} sonuç bulundu
+                    "<strong>{{ $search }}</strong>" araması ve "<strong>{{ $selectedTag }}</strong>" etiketi için {{ isset($posts) && $posts ? count($posts) : 0 }} sonuç bulundu
                 @elseif(!empty($search))
                     <i class="fas fa-search me-2"></i>
-                    "<strong>{{ $search }}</strong>" araması için {{ $posts->count() }} sonuç bulundu
+                    "<strong>{{ $search }}</strong>" araması için {{ isset($posts) && $posts ? count($posts) : 0 }} sonuç bulundu
                 @elseif(!empty($selectedTag))
                     <i class="fas fa-tag me-2"></i>
-                    "<strong>{{ $selectedTag }}</strong>" etiketli {{ $posts->count() }} yazı
+                    "<strong>{{ $selectedTag }}</strong>" etiketli {{ isset($posts) && $posts ? count($posts) : 0 }} yazı
                 @endif
             </div>
             <a href="{{ url('/') }}" class="btn btn-outline-primary btn-sm">
@@ -40,7 +58,7 @@
             @endif
         </h2>
         
-        @forelse($posts as $post)
+        @forelse($posts ?? [] as $post)
         <!-- Blog Post (Dynamic) -->
         <article class="blog-post">
             <div class="d-flex justify-content-between align-items-start mb-3">
@@ -93,7 +111,7 @@
                 <div class="flex-shrink-0">
                     @if($post->featured_image)
                     <img src="{{ asset('storage/' . $post->featured_image) }}" alt="{{ $post->title }}" 
-                    class="rounded" style="width: 200px; height: 150px; object-fit: cover;">
+                    class="rounded" style="width: 250px; height: 150px; object-fit: cover;">
                     @else
                     <img src="https://via.placeholder.com/200x150?text=Blog&bg=6c757d&color=ffffff" 
                     alt="Default" class="rounded" style="width: 200px; height: 150px; object-fit: cover;">
@@ -101,60 +119,28 @@
                 </div>
             </div>  
 
-                    <!-- ETIKETLER (ALTTA) - HİBRİT SİSTEM -->
-@php
-    $displayTags = [];
-    
-    // Önce relational tags'ı dene
-    try {
-        if ($post->relationLoaded('tags') && $post->tags->count() > 0) {
-            // Relational tags var
-            foreach ($post->tags as $tag) {
-                $displayTags[] = [
-                    'name' => $tag->name,
-                    'type' => 'relational'
-                ];
-            }
-        }
-    } catch (\Exception $e) {
-        // Relational yok, devam et
-    }
-    
-    // Eğer relational tags yoksa, JSON'dan al
-    if (empty($displayTags) && isset($post->tags)) {
-        if (is_string($post->tags)) {
-            $jsonTags = json_decode($post->tags, true) ?: [];
-            foreach ($jsonTags as $tag) {
-                $displayTags[] = [
-                    'name' => $tag,
-                    'type' => 'json'
-                ];
-            }
-        } elseif (is_array($post->tags)) {
-            foreach ($post->tags as $tag) {
-                $displayTags[] = [
-                    'name' => $tag,
-                    'type' => 'array'
-                ];
-            }
-        }
-    }
-@endphp
+                
 
-@if(!empty($displayTags))
-<div class="d-flex flex-wrap gap-2 mb-3">
-    @foreach($displayTags as $tag)
-        <a href="/?tag={{ urlencode($tag['name']) }}" 
-           class="badge {{ $selectedTag === $tag['name'] ? 'bg-warning text-dark' : 'bg-secondary' }} text-decoration-none">
-            {{ $tag['name'] }}
-            @if($tag['type'] === 'relational')
-                <i class="fas fa-database ms-1" title="Relational"></i>
-            @endif
-        </a>
-    @endforeach
-</div>
-@endif
+            <!-- ETIKETLER - BASİT VERSİYON -->
+            @php
+                $postTags = DB::table('post_tags')
+                             ->join('tags', 'post_tags.tag_id', '=', 'tags.id')
+                             ->where('post_tags.post_id', $post->id)
+                             ->select('tags.name')
+                             ->get();
+            @endphp
             
+            @if($postTags->count() > 0)
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                @foreach($postTags as $tag)
+                    <a href="/?tag={{ urlencode($tag->name) }}" 
+                       class="badge bg-dark text-light text-decoration-none rounded-pill px-3 py-2">
+                        <i class="fas fa-hashtag me-1"></i>{{ $tag->name }}
+                    </a>
+                @endforeach
+            </div>
+            @endif
+
             <!-- REACTION BAR EN ALTTA -->
             <div class="reaction-bar d-flex justify-content-between align-items-center">
                 <div class="d-flex gap-3">
@@ -190,6 +176,8 @@
                             <li><a class="dropdown-item" href="#">😮 Şaşırtıcı</a></li>
                         </ul>
                     </div>
+
+                    
                     
                     <!-- Sadece yazarın kendisi düzenleyebilir -->
                     @auth
@@ -225,7 +213,7 @@
         @endforelse
 
         <!-- Alt Butonlar -->
-        @if(!$search)
+        @if(!isset($search)|| !$search)
         <div class="text-center mt-5 mb-4">
             <h4>Siz de yazı paylaşmak ister misiniz?</h4>
             <p class="text-muted">Bilgilerinizi topluluğumuzla paylaşın ve deneyimlerinizi aktarın.</p>
@@ -246,17 +234,18 @@
                 </a>
             @endauth
             
-            <a href="/posts" class="btn btn-outline-secondary btn-lg">
+            <a href="/index" class="btn btn-outline-secondary btn-lg">
                 <i class="fas fa-list me-2"></i>Tüm Yazıları Gör
             </a>
         </div>
         @endif
     </div>
 </div>
-@section('scripts')
 
+@endsection
+
+@section('scripts')
 <script>
-    
     // CSRF Token
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     
@@ -317,5 +306,4 @@
     });
 });
 </script>
-@endsection
 @endsection

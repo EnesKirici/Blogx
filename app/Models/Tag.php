@@ -1,4 +1,5 @@
 <?php
+// filepath: c:\Users\MS\Desktop\z\Blogx\app\Models\Tag.php
 
 namespace App\Models;
 
@@ -19,29 +20,32 @@ class Tag extends Model
 
     // Posts ilişkisi (Many-to-Many)
     public function posts()
-    {
-        return $this->belongsToMany(Post::class, 'post_tags');
-    }
+{
+    return $this->belongsToMany(Post::class, 'post_tag', 'tag_id', 'post_id');
+}
 
-    // Slug otomatik oluştur
+    // Tag oluştur veya mevcut olanı getir
     public static function createFromName($name)
     {
         $name = trim($name);
         $slug = Str::slug($name);
         
-        // Aynı isimde tag var mı kontrol et
+        // Mevcut tag'i kontrol et
         $existingTag = self::where('name', $name)->first();
         if ($existingTag) {
-            // Varsa usage_count'u artır
             $existingTag->increment('usage_count');
             return $existingTag;
         }
         
-        // Yoksa yeni oluştur
+        // Yeni tag oluştur
         return self::create([
             'name' => $name,
             'slug' => $slug,
             'usage_count' => 1
         ]);
     }
+
+    
+
+    
 }
