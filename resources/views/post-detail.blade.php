@@ -3,6 +3,20 @@
 @section('title', 'Blog Detayı ')
 
 @section('content')
+
+<style>
+    .btn-xx{
+        background-color: #3d040a !important;
+        border-color: #3d040a !important;
+        border: none;
+    }
+    .btn-xx:hover{
+        box-shadow: #dc3545 0 0 8px;
+        transform: translateY(-3px);
+        transition: all 0.3s ease;
+        background-color: #3d040a !important;
+    }
+</style>
 <div class="row">
     <div class="col-lg-8 mx-auto">
         <!-- Blog Post (Dynamic) -->
@@ -109,41 +123,10 @@
         <!-- Comments Section (DİNAMİK YORUMLAR) -->
         @if($post->allow_comments)
         <div class="comment-section mt-4">
-            <h4 class="mb-3">
-                <i class="fas fa-comments me-2"></i>Yorumlar ({{ $post->comments_count }})
-            </h4>
+            
             
             <!-- Add Comment Form -->
             @auth
-            <div class="mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        @if($post->allow_comments)
-                            <div id="comments" class="comment-section mt-4">
-                                 <form action="{{ route('comments.store', $post->slug) }}" method="POST">
-                            @csrf
-                            <div class="mb-3">
-                                <textarea class="form-control" name="content" rows="3" 
-                                          placeholder="Yorumunuzu yazın..." required>{{ old('content') }}</textarea>
-                                @error('content')
-                                    <div class="text-danger small mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Saygılı yorumlarınız bekleniyor
-                                </small>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-paper-plane me-1"></i>Yorum Yap
-                                </button>
-                            </div>
-                        </form>
-                            </div>
-                            @endif
-                    </div>
-                </div>
-            </div>
             @else
             <div class="text-center mb-4">
                 <p class="text-muted">Yorum yapmak için giriş yapmalısınız.</p>
@@ -154,53 +137,111 @@
             @endauth
             
             <!-- Comments List -->
-            @forelse($post->comments as $comment)
-            <div class="card mb-3">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="flex-grow-1">
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="fas fa-user-circle fa-lg text-primary me-2"></i>
-                                <div>
-                                    <strong>{{ $comment->user->name }} {{ $comment->user->surname }}</strong>
-                                    <small class="text-muted ms-2">{{ $comment->created_at->diffForHumans() }}</small>
+            <div class="comments-section">
+                <h4 class="mb-4">
+                    <i class="fas fa-comments me-2"></i>Yorumlar ({{ $post->comments->count() }})
+                </h4>
+                
+                @forelse($post->comments as $comment)
+                <div class="comment-item mb-4 p-3 rounded" style="background-color: rgba(45, 45, 45, 0.8); border-left: 4px solid #dc3545;">
+                    <div class="d-flex align-items-start">
+                        <!-- Profil Fotoğrafı -->
+                        <div class="me-3">
+                            @if($comment->user->profile_photo)
+                                <img src="{{ asset('storage/' . $comment->user->profile_photo) }}" 
+                                     alt="{{ $comment->user->name }}" 
+                                     class="rounded-circle" 
+                                     style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #dc3545;">
+                            @else
+                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" 
+                                     style="width: 50px; height: 50px; border: 2px solid #dc3545;">
+                                    <i class="fas fa-user text-light"></i>
                                 </div>
-                            </div>
-                            <p class="mb-0">{{ $comment->content }}</p>
+                            @endif
                         </div>
                         
-                        <!-- Sadece yorum sahibi silebilir -->
-                        @auth
-                            @if($comment->user_id === auth()->id())
-                            <div class="dropdown">
-                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
-                                    <i class="fas fa-ellipsis-v"></i>
+                        <!-- Yorum İçeriği -->
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong class="text-light">{{ $comment->user->name }} {{ $comment->user->surname }}</strong>
+                                    <small class="text-muted ms-2">
+                                        <i class="fas fa-clock me-1"></i>{{ $comment->created_at->diffForHumans() }}
+                                    </small>
+                                </div>
+                                
+                                @if(auth()->check() && (auth()->id() === $comment->user_id || auth()->id() === $post->user_id))
+                                <button class="btn btn-outline-danger btn-sm" 
+                                        onclick="deleteComment({{ $comment->id }})">
+                                    <i class="fas fa-trash"></i>
                                 </button>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <form action="{{ route('comments.destroy', $comment->id) }}" method="POST" 
-                                              onsubmit="return confirm('Bu yorumu silmek istediğinizden emin misiniz?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="dropdown-item text-danger">
-                                                <i class="fas fa-trash me-1"></i>Sil
-                                            </button>
-                                        </form>
-                                    </li>
-                                </ul>
+                                @endif
                             </div>
-                            @endif
-                        @endauth
+                            
+                            <p class="text-light mb-0">{{ $comment->content }}</p>
+                        </div>
                     </div>
                 </div>
+                @empty
+                <div class="text-center py-4">
+                    <i class="fas fa-comment-slash fa-2x text-muted mb-3"></i>
+                    <p class="text-muted">Henüz yorum yapılmamış. İlk yorumu siz yapın!</p>
+                </div>
+                @endforelse
             </div>
-            @empty
-            <div class="text-center py-4">
-                <i class="fas fa-comment-slash fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">Henüz yorum yapılmamış</h5>
-                <p class="text-muted">İlk yorumu siz yapın!</p>
+
+            <!-- Yorum Yapma Formu -->
+            @auth
+            <div class="comment-form mt-5">
+                <h5 class="mb-3">
+                    <i class="fas fa-pen me-2"></i>Yorum Yap
+                </h5>
+                
+                <form action="{{ route('comments.store', ['slug'=>$post->slug]) }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="post_id" value="{{ $post->id }}">
+                    
+                    <div class="d-flex align-items-start">
+                        <!-- Yorum Yapan Kullanıcının Profil Fotoğrafı -->
+                        <div class="me-3">
+                            @if(auth()->user()->profile_photo)
+                                <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" 
+                                     alt="{{ auth()->user()->name }}" 
+                                     class="rounded-circle" 
+                                     style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #dc3545;">
+                            @else
+                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" 
+                                     style="width: 50px; height: 50px; border: 2px solid #dc3545;">
+                                    <i class="fas fa-user text-light"></i>
+                                </div>
+                            @endif
+                        </div>
+                        
+                        <!-- Yorum Input Alanı -->
+                        <div class="flex-grow-1">
+                            <div class="mb-3">
+                                <textarea class="form-control bg-dark text-light border-secondary" 
+                                          name="content" 
+                                          rows="5" 
+                                          placeholder="Düşüncelerinizi paylaşın..." 
+                                          required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-danger btn-xx">
+                                <i class="fas fa-paper-plane me-2"></i>Yorum Gönder
+                            </button>
+                        </div>
+                    </div>
+                </form>
             </div>
-            @endforelse
+            @else
+            <div class="text-center py-4 border rounded bg-dark">
+                <i class="fas fa-sign-in-alt fa-2x text-muted mb-3"></i>
+                <p class="text-muted mb-3">Yorum yapabilmek için giriş yapmanız gerekiyor.</p>
+                <a href="{{ route('user.login') }}" class="btn btn-outline-danger">
+                    <i class="fas fa-sign-in-alt me-2"></i>Giriş Yap
+                </a>
+            </div>
+            @endauth
         </div>
         @endif
         
@@ -317,5 +358,31 @@ document.querySelectorAll('.like-btn').forEach(button => {
 });
 </script>
 @endsection
+
+<style>
+    /* Yorum stilleri */
+    .comment-item {
+        transition: all 0.3s ease;
+        border: 1px solid rgba(220,53,69,0.2);
+    }
+
+    .comment-item:hover {
+        background-color: rgba(55, 55, 55, 0.9) !important;
+        transform: translateX(5px);
+        border-color: rgba(220,53,69,0.5);
+    }
+
+    .comment-form textarea:focus {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+
+    /* Profil fotoğrafı hover efekti */
+    .comment-item img:hover,
+    .comment-form img:hover {
+        transform: scale(1.05);
+        transition: all 0.3s ease;
+    }
+</style>
 
 @endsection

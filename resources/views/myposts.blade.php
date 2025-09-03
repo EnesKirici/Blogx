@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 <style> 
 .profile-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(130deg, #530000 0%, #000000 100%);
     border-radius: 15px;
     color: white;
     padding: 2rem;
@@ -18,15 +18,15 @@ use Illuminate\Support\Facades\DB;
 }
 
 .profile-avatar {
-    width: 80px;
-    height: 80px;
+    width: 160px;
+    height: 160px;
     border-radius: 50%;
     border: 4px solid rgba(255,255,255,0.3);
     object-fit: cover;
 }
 
 .stats-card {
-    background: rgba(255,255,255,0.1);
+   /* background: rgba(255,255,255,0.1/ %0); */
     border-radius: 10px;
     padding: 1rem;
     backdrop-filter: blur(10px);
@@ -84,7 +84,29 @@ use Illuminate\Support\Facades\DB;
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(0,0,0,0.15);
     border-color: #dc3545 !important;
-    box-shadow: 0 0 15px rgba(220,53,69,0.4);
+}
+.modal-content.bg-dark {
+    background-color: #2d2d2d !important;
+}
+
+.form-control.bg-dark:focus {
+    background-color: #3d3d3d !important;
+    border-color: #dc3545 !important;
+    color: #fff !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.btn-close-white {
+    filter: brightness(0) invert(1);
+}
+
+.btn-profile:hover{
+    box-shadow: 0 0 8px rgba(80, 0, 0, 0.9);
+    transition: all 0.3s ease;
+}
+.btn-profile{
+    background: none;
+    color: white;
 }
     
 </style>
@@ -93,15 +115,27 @@ use Illuminate\Support\Facades\DB;
 <div class="profile-card">
     <div class="row align-items-center">
         <div class="col-md-3 text-center">
-            <div class="profile-avatar bg-white text-dark d-flex align-items-center justify-content-center mx-auto">
-                <i class="fas fa-user fa-2x"></i>
-            </div>
-            <!-- Profil fotoğrafı butonunu şimdilik kaldırdık -->
+            @if(auth()->user()->profile_photo)
+                <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" 
+                     alt="Profil Fotoğrafı" class="profile-avatar">
+            @else
+                <div class="profile-avatar bg-white text-dark d-flex align-items-center justify-content-center mx-auto">
+                    <i class="fas fa-user fa-2x"></i>
+                </div>
+            @endif
+            <button class="btn btn-light btn-sm mt-2 btn-profile" data-bs-toggle="modal" data-bs-target="#profileModal">
+                <i class="fas fa-edit me-3"></i>Profili Düzenle
+            </button>
         </div>
         <div class="col-md-6">
             <h2 class="mb-1">{{ auth()->user()->name }} {{ auth()->user()->surname ?? '' }}</h2>
             <p class="mb-3 opacity-75">{{ auth()->user()->email }}</p>
-            <p class="mb-0">Blogger olarak paylaştığınız içeriklerle topluluğumuza katkıda bulunuyorsunuz!</p>
+            
+            @if(auth()->user()->bio)
+                <p class="mb-0">{{ auth()->user()->bio }}</p>
+            @else
+                <p class="mb-0 fst-italic opacity-50">Bio bilginizi ekleyin...</p>
+            @endif
         </div>
         <div class="col-md-3">
             <div class="stats-card text-center">
@@ -115,6 +149,8 @@ use Illuminate\Support\Facades\DB;
         </div>
     </div>
 </div>
+
+
 
 <!-- Sayfa Başlığı ve Aksiyonlar -->
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -238,10 +274,113 @@ use Illuminate\Support\Facades\DB;
 </div>
 @endforelse
 
+<!-- Profil Düzenleme Modal -->
+<div class="modal fade" id="profileModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-edit me-2"></i>Profili Düzenle
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form action="{{ route('user.update-profile') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- Profil Fotoğrafı -->
+                        <div class="col-md-4 text-center mb-4">
+                            <div class="current-photo mb-3">
+                                @if(auth()->user()->profile_photo)
+                                    <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" 
+                                         alt="Mevcut Profil Fotoğrafı" 
+                                         class="img-fluid rounded-circle" 
+                                         style="width: 150px; height: 150px; object-fit: cover;">
+                                @else
+                                    <div class="bg-secondary rounded-circle mx-auto d-flex align-items-center justify-content-center" 
+                                         style="width: 150px; height: 150px;">
+                                        <i class="fas fa-user fa-3x text-light"></i>
+                                    </div>
+                                @endif
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="profile_photo" class="form-label">
+                                    <i class="fas fa-camera me-1"></i>Yeni Profil Fotoğrafı
+                                </label>
+                                <input type="file" class="form-control bg-dark text-light border-secondary" 
+                                       name="profile_photo" id="profile_photo" accept="image/*">
+                                <div class="form-text">JPG, PNG, GIF formatları desteklenir. Maksimum 2MB.</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bio Bilgisi -->
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="bio" class="form-label">
+                                    <i class="fas fa-pen me-1"></i>Bio (Hakkınızda)
+                                </label>
+                                <textarea class="form-control bg-dark text-light border-secondary" 
+                                          name="bio" id="bio" rows="8" 
+                                          placeholder="Kendinizi tanıtın, ilgi alanlarınızı, uzmanlık konularınızı paylaşın...">{{ auth()->user()->bio }}</textarea>
+                                <div class="form-text">Maksimum 500 karakter</div>
+                            </div>
+                            
+                            <!-- Karakter Sayacı -->
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <span id="char-count">{{ strlen(auth()->user()->bio ?? '') }}</span>/500 karakter
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>İptal
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @section('scripts')
 <script>
+// Karakter sayacı
+document.getElementById('bio').addEventListener('input', function() {
+    const charCount = this.value.length;
+    document.getElementById('char-count').textContent = charCount;
+    
+    if (charCount > 500) {
+        document.getElementById('char-count').style.color = '#dc3545';
+    } else {
+        document.getElementById('char-count').style.color = '#6c757d';
+    }
+});
+
+// Fotoğraf önizleme
+document.getElementById('profile_photo').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const currentPhoto = document.querySelector('.current-photo img, .current-photo div');
+            currentPhoto.outerHTML = `<img src="${e.target.result}" alt="Önizleme" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">`;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Silme fonksiyonu
+
 function deletePost(slug) {
     if (confirm('Bu yazıyı silmek istediğinizden emin misiniz?')) {
         fetch(`/posts/${slug}`, {

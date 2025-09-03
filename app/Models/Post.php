@@ -54,6 +54,12 @@ class Post extends Model
         return $this->hasMany(\App\Models\Like::class);
     }
 
+    // Emojiler ilişkisi
+    public function emojis()
+    {
+        return $this->hasMany(PostEmoji::class);
+    }
+
     // Tags ilişkisi (Many-to-Many) - SADECE BU KALACAK
 
     // Kullanıcı beğenmiş mi?
@@ -115,4 +121,39 @@ class Post extends Model
     {
         return $this->tags->pluck('name')->toArray();
     }
+
+    // Emoji ile ilgili metodlar
+public function getEmojiCounts()
+{
+    return $this->emojis()
+        ->selectRaw('emoji_type, COUNT(*) as count')
+        ->groupBy('emoji_type')
+        ->pluck('count', 'emoji_type')
+        ->toArray();
+}
+
+public function getUserEmoji($userId)
+{
+    if (!$userId) return null;
+    
+    return $this->emojis()
+        ->where('user_id', $userId)
+        ->first();
+}
+
+public function getTotalEmojiCount()
+{
+    return $this->emojis()->count();
+}
+
+// Görüntülenme sayısını güvenli artırma (session bazlı)
+public function incrementViewCount()
+{
+    $sessionKey = 'post_viewed_' . $this->id;
+    
+    if (!session()->has($sessionKey)) {
+        $this->increment('views_count');
+        session()->put($sessionKey, true);
+    }
+}
 }

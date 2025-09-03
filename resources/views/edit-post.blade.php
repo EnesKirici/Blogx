@@ -94,14 +94,34 @@
 <div class="row">
     <div class="col-lg-8 mx-auto">
         <div class="card">
-            <div class="card-header">
-                <h3 class="mb-0">
-                    <i class="fas fa-edit me-2"></i>Blog Düzenle: {{ \Illuminate\Support\Str::limit($post->title, 50) }}
-                </h3>
-                <small class="text-muted">
-                    Son güncelleme: {{ $post->updated_at->format('d M Y H:i') }}
-                </small>
-            </div>
+            <div class="card-header d-flex justify-content-between align-items-center">
+    <div>
+        <h3 class="mb-0">
+            <i class="fas fa-edit me-2"></i>Blog Düzenle: {{ \Illuminate\Support\Str::limit($post->title, 50) }}
+        </h3>
+        <small class="text-muted">
+            Son güncelleme: {{ $post->updated_at->format('d M Y H:i') }}
+        </small>
+    </div>
+
+    @auth
+        @if($post->user_id === auth()->id())
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ route('posts.edit', $post->slug) }}">
+                    <i class="fas fa-edit me-1"></i>Düzenle
+                </a></li>
+                <li><a class="dropdown-item text-danger" href="#" onclick="deletePost('{{ $post->slug }}')">
+                    <i class="fas fa-trash me-1"></i>Sil
+                </a></li>
+            </ul>
+        </div>
+        @endif
+    @endauth
+</div>
             <div class="card-body">
                 <form method="POST" action="{{ route('posts.update', $post->slug) }}" enctype="multipart/form-data">                  
                     @csrf
@@ -404,6 +424,31 @@ document.getElementById('previewModal').addEventListener('show.bs.modal', functi
         <div>${html || 'İçerik girilmedi'}</div>
     `;
 });
+
+function deletePost(slug) {
+    if(confirm('Bu yazıyı silmek istediğinizden emin misiniz?')) {
+        fetch(`/posts/${slug}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Yazı başarıyla silindi!');
+                window.location.href = '/my-posts'; // Yazılarım sayfasına yönlendir
+            } else {
+                alert('Hata: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Bir hata oluştu!');
+        });
+    }
+}
 </script>
 @endsection
 

@@ -239,6 +239,7 @@
                             <i class="fas fa-newspaper me-1"></i>Tüm Yazılar
                         </a>
                     </li>
+                    
                     <!-- TAG DROPDOWN (YENİ) -->
                     <li class="nav-item tag-dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="tagDropdown" role="button">
@@ -315,11 +316,29 @@
                                 </li>
                             </ul>
                         </li>
+
+                        @if(auth()->user()->isAdmin())
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-crown me-1"></i>Admin
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}">
+                                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ route('admin.posts') }}">
+                                    <i class="fas fa-newspaper me-1"></i>Tüm Bloglar
+                                </a></li>
+                            </ul>
+                        </li>
+                        @endif
                     @endguest
                 </ul>
             </div>
         </div>
     </nav> 
+
+    
 
     <!-- Main Content -->
     <main class="container mt-4">

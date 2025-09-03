@@ -10,15 +10,40 @@ class HomeController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request->get('search');
-        $selectedTag = $request->get('tag');
+        $search = $request->get('search', '');
+        $selectedTag = $request->get('tag', '');
         
-        $query = Post::with(['user', 'tags']) // tags eklendi
+        // Slider için son 5 blog yazısı (görselli olanlar) - dinamik
+        $sliderQuery = Post::with(['user'])
+                          ->where('status', 'published')
+                          ->whereNotNull('featured_image')
+                          ->latest('published_at');
+        
+        // Eğer arama varsa slider'da da arama yap
+        if (!empty($search)) {
+            $sliderQuery->where(function($q) use ($search) {
+                $q->where('title', 'LIKE', "%{$search}%")
+                  ->orWhere('content', 'LIKE', "%{$search}%")
+                  ->orWhere('excerpt', 'LIKE', "%{$search}%");
+            });
+        }
+        
+        // Tag filtresi varsa slider'da da uygula
+        if (!empty($selectedTag)) {
+            $sliderQuery->whereHas('tags', function($q) use ($selectedTag) {
+                $q->where('name', $selectedTag);
+            });
+        }
+        
+        $sliderPosts = $sliderQuery->take(5)->get();
+        
+        // Normal posts sorgusu
+        $query = Post::with(['user', 'tags'])
                      ->withCount(['likes', 'comments'])
                      ->where('status', 'published')
                      ->latest('published_at');
         
-        if ($search) {
+        if (!empty($search)) {
             $query->where(function($q) use ($search) {
                 $q->where('title', 'LIKE', "%{$search}%")
                   ->orWhere('content', 'LIKE', "%{$search}%")
@@ -26,7 +51,7 @@ class HomeController extends Controller
             });
         }
         
-        if ($selectedTag) {
+        if (!empty($selectedTag)) {
             $query->whereHas('tags', function($q) use ($selectedTag) {
                 $q->where('name', $selectedTag);
             });
@@ -34,44 +59,32 @@ class HomeController extends Controller
         
         $posts = $query->get();
         
-        return view('home', compact('posts', 'search', 'selectedTag'));
+        return view('home', compact('posts', 'search', 'selectedTag', 'sliderPosts'));
     }
-    
 
     public function about()
     {
         return view('about');
     }
 
-
-
     // API Endpoint - Sadece relational tags
     public function getTags()
     {
         try {
-            $tags = Tag::orderBy('usage_count', 'desc')
-                      ->orderBy('name', 'asc')
-                      ->get();
-            
-            $tagsArray = [];
-            foreach ($tags as $tag) {
-                $tagsArray[] = [
-                    'name' => $tag->name,
-                    'count' => $tag->usage_count,
-                    'slug' => $tag->slug
-                ];
-            }
-            
+            $tags = Tag::has('posts')
+                       ->withCount('posts')
+                       ->orderBy('posts_count', 'desc')
+                       ->take(10)
+                       ->get();
+                       
             return response()->json([
                 'success' => true,
-                'tags' => $tagsArray
+                'tags' => $tags
             ]);
-            
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'error' => $e->getMessage(),
-                'tags' => []
+                'message' => 'Tag\'lar yüklenirken hata oluştu'
             ], 500);
         }
     }

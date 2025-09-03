@@ -92,20 +92,19 @@ class PostController extends Controller
     // Tek blog yazısını göster
     public function show($slug)
     {
-        $post = Post::with(['user', 'comments.user', 'tags'])
-                   ->withCount(['likes', 'comments'])
-                   ->where('slug', $slug)
-                   ->where('status', 'published')
-                   ->firstOrFail();
-
+        $post = Post::with(['user', 'tags', 'comments.user'])->where('slug', $slug)->firstOrFail();
+        
+        // Görüntüleme sayısını artır
         $post->increment('views_count');
-
-        $relatedPosts = Post::with('user')
-                           ->where('status', 'published')
-                           ->where('id', '!=', $post->id)
-                           ->limit(2)
-                           ->get();
-
+        
+        // Sadece son yazıları göster (basit)
+        $relatedPosts = Post::with(['user'])
+                       ->where('status', 'published')
+                       ->where('id', '!=', $post->id)
+                       ->latest('published_at')
+                       ->take(4)
+                       ->get();
+    
         return view('post-detail', compact('post', 'relatedPosts'));
     }
 
@@ -163,7 +162,7 @@ class PostController extends Controller
             'allow_comments' => $request->has('allow_comments'),
             'is_featured' => $request->has('is_featured'),
             'published_at' => $publishedAt,
-            'user_id' => auth()->id()
+            'user_id' => Auth::id()
         ]);
         
         if ($request->filled('tags')) {
@@ -245,14 +244,20 @@ class PostController extends Controller
             $post = Post::where('slug', $slug)->firstOrFail();
             
             // Sadece yazı sahibi silebilir
-            if ($post->user_id !== auth()->id()) {
+            if ($post->user_id !== auth::id()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Bu yazıyı silme yetkiniz yok!'
                 ], 403);
             }
             
-            // Fotoğrafı sil (varsa)
+            // 1. Post-tag ilişkilerini sil (post_tags tablosundan)
+            $post->tags()->detach();
+            
+            // 2. Kullanılmayan tag'ları temizle
+            $this->cleanupUnusedTags();
+            
+            // 3. Fotoğrafı sil (varsa)
             if ($post->featured_image) {
                 $imagePath = public_path('storage/' . $post->featured_image);
                 if (file_exists($imagePath)) {
@@ -260,18 +265,30 @@ class PostController extends Controller
                 }
             }
             
+            // 4. Post'u sil
             $post->delete();
             
             return response()->json([
                 'success' => true,
-                'message' => 'Yazı başarıyla silindi!'
+                'message' => 'Yazı ve ilgili etiketler başarıyla silindi!'
             ]);
             
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Silme işlemi sırasında hata oluştu!'
+                'message' => 'Silme işlemi sırasında hata oluştu: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    // Kullanılmayan tag'ları temizleme method'u
+    private function cleanupUnusedTags()
+    {
+        // Hiçbir post'a bağlı olmayan tag'ları bul ve sil
+        $unusedTags = \App\Models\Tag::doesntHave('posts')->get();
+        
+        foreach ($unusedTags as $tag) {
+            $tag->delete();
         }
     }
 }

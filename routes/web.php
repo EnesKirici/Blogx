@@ -8,7 +8,17 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CommentController; 
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AdminController;
+PostController
 
+
+// Admin Routes (Laravel 11/12 style)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/admin/posts', [AdminController::class, 'posts'])->name('admin.posts');
+    Route::delete('/admin/posts/{id}', [AdminController::class, 'deletePost'])->name('admin.posts.delete');
+    Route::post('/admin/posts/{id}/toggle-status', [AdminController::class, 'togglePostStatus'])->name('admin.posts.toggle-status');
+});
 
 // Ana sayfa
 Route::get('/', [HomeController::class, 'index'])->name('index');
@@ -29,7 +39,7 @@ Route::put('/posts/{slug}', [PostController::class, 'update'])->name('posts.upda
 
 // YORUM SİSTEMİ
 Route::post('/posts/{slug}/comments', [CommentController::class, 'store'])->name('comments.store');
-Route::delete('/comments/{id}', [CommentController::class, 'destroy'])->name('comments.destroy');
+Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
 // BEĞENİ SİSTEMİ 
 Route::post('/posts/{slug}/like', [PostController::class, 'like'])->name('posts.like');
@@ -39,6 +49,9 @@ Route::get('/my-posts', [PostController::class, 'myPosts'])->name('posts.my-post
 
 // post silme
 Route::delete('/posts/{slug}', [PostController::class, 'destroy'])->name('posts.destroy');
+
+// Kullanıcı profil güncelleme
+Route::post('/user/update-profile', [UserController::class, 'updateProfile'])->name('user.update-profile');
 
 
 // Auth Routes

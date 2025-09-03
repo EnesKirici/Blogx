@@ -12,9 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('surname')->nullable()->after('name');      // Soyad (name'den sonra)
-            $table->string('gender')->nullable()->after('email');      // Cinsiyet (email'den sonra)
-            $table->string('city')->nullable()->after('gender');       // Şehir (gender'dan sonra)
+            $table->string('surname')->nullable()->after('name');     
+            $table->string('gender')->nullable()->after('email');      
+            $table->string('city')->nullable()->after('gender');       
+            $table->string('profile_photo')->nullable();
+            $table->text('bio')->nullable();
         });
     }
 
@@ -24,7 +26,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['surname', 'gender', 'city']);
+            $table->dropColumn(['surname', 'gender', 'city', 'profile_photo', 'bio']);
         });
     }
 };
